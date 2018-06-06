@@ -1,0 +1,9 @@
+.DS_Store
+._*
+
+*.pyc
+
+data/
+net/
+result/
+tmp/
