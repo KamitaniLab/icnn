@@ -3,7 +3,7 @@
 
 *.pyc
 
-data/
-net/
+*.caffemodel
+
 result/
 tmp/
