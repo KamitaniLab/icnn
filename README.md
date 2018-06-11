@@ -8,11 +8,11 @@ Version 1.1 (updated: 2018-06-11)
 
 
 ## Requirements
-Python 2.7
-Numpy 1.11.2
-Scipy 0.16.0
-Caffe: https://github.com/dosovits/caffe-fr-chairs (Branch: deepsim) (both CPU and GPU installation are OK)
 
+- Python 2.7
+- Numpy 1.11.2
+- Scipy 0.16.0
+- Caffe: https://github.com/dosovits/caffe-fr-chairs (Branch: deepsim) (both CPU and GPU installation are OK)
 
 ## general description
 This repository contains source codes of the image reconstruction algorithms used in the paper “Deep image reconstruction from human brain activity” [1].
@@ -99,6 +99,8 @@ However, as default setting, ReLU operation is an in-place computation, which wi
 In order to use the CNN features before the ReLU operation, we need to modify the prototxt file.
 Taking the VGG19 prototxt file as an example:
 In the original prototxt file, ReLU is in-place computation:
+
+```
 layers {
   bottom: "conv1_1"
   top: "conv1_1"
@@ -112,9 +114,10 @@ layers {
   name: "relu1_1"
   type: RELU
 }
-
+```
 
 ## Deep Generator Network
+
 In our study [1] and the example codes in this repository, we use pre-trained deep generator network (DGN) from the study [4] (downloaded from: https://lmb.informatik.uni-freiburg.de/resources/binaries/arxiv2016_alexnet_inversion_with_gans/release_deepsim_v0.zip).
 In order to make back-propagation work, one line should be added to the prototxt file (the file describes the configuration of the DGN):
 force_backward: true
