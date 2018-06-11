@@ -2,10 +2,9 @@
 
 Inverting CNN (iCNN): reconstructing the original image from the CNN features
 
-
 ## Version
-Version 1.1 (updated: 2018-06-11)
 
+Version 1.1 (updated: 2018-06-11)
 
 ## Requirements
 
