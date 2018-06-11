@@ -13,7 +13,7 @@ Version 1.1 (updated: 2018-06-11)
 - Scipy 0.16.0
 - [Caffe](https://github.com/dosovits/caffe-fr-chairs) (Branch: deepsim) (both CPU and GPU installation are OK)
 
-## general description
+## General description
 
 This repository contains source codes of the image reconstruction algorithms used in the paper “Deep image reconstruction from human brain activity” [1].
 The image reconstruction algorithms are extension of the algorithm proposed in the paper “Understanding deep image representations by inverting them” [2].
