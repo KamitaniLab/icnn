@@ -8,10 +8,9 @@ import numpy as np
 import PIL.Image
 import caffe
 import scipy.io as sio
-from scipy.misc import imresize
 from datetime import datetime
 
-from icnn.utils import normalise_img, get_cnn_features, estimate_cnn_feat_std
+from icnn.utils import normalise_img, estimate_cnn_feat_std
 from icnn.icnn_gd import reconstruct_image
 
 # average image of ImageNet
