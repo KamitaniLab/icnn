@@ -13,7 +13,7 @@ Version 1.1 (updated: 2018-06-11)
 - Python 2.7
 - Numpy 1.11.2
 - Scipy 0.16.0
-- [Caffe](https://github.com/dosovits/caffe-fr-chairs) (Branch: deepsim) (both CPU and GPU installation are OK)
+- Caffe with up-convolutional: https://github.com/dosovits/caffe-fr-chairs (Branch: deepsim) (both CPU and GPU installation are OK)
 
 ## General description
 
@@ -101,11 +101,12 @@ img, loss_list = reconstruct_image(features, net, net_gen)
 In the example codes, we use pre-trained VGG19 model (caffemodel_url: http://www.robots.ox.ac.uk/~vgg/software/very_deep/caffe/VGG_ILSVRC_19_layers.caffemodel).
 You can replace it with any other CNN models in the example codes.
 In order to make back-propagation work, one line should be added to the prototxt file (the file describes the configuration of the CNN model):
+
 `force_backward: true`.
 
 ## CNN features before or after ReLU
 
-In our study [1] and the example codes in this repository, we define CNN features of conv layers or fc layers as the output immediately after the conelutional or fully-connected computation, before applying the Rectified-Linear-Unit (ReLU).
+In our study [1] and the example codes in this repository, we define CNN features of conv layers or fc layers as the output immediately after the convolutional or fully-connected computation, before applying the Rectified-Linear-Unit (ReLU).
 However, as default setting, ReLU operation is an in-place computation, which will override the CNN features we need.
 In order to use the CNN features before the ReLU operation, we need to modify the prototxt file.
 Taking the VGG19 prototxt file as an example:
@@ -137,6 +138,7 @@ layers {
 
 In our study [1] and the example codes in this repository, we use pre-trained deep generator network (DGN) from the study [4] (downloaded from: https://lmb.informatik.uni-freiburg.de/resources/binaries/arxiv2016_alexnet_inversion_with_gans/release_deepsim_v0.zip).
 In order to make back-propagation work, one line should be added to the prototxt file (the file describes the configuration of the DGN):
+
 `force_backward: true`.
 
 ## Reference
@@ -156,7 +158,7 @@ The scripts provided here are released under the MIT license (http://opensource.
 
 Shen Guo-Hua (E-mail: shen-gh@atr.jp)
 
-Kei Majima (E-mail: majimai.kyoto-u.ac.jp)
+Kei Majima (E-mail: majima@i.kyoto-u.ac.jp)
 
 ## Acknowledgement
 
