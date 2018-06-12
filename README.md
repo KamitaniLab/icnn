@@ -13,7 +13,7 @@ Version 1.1 (updated: 2018-06-11)
 - Python 2.7
 - Numpy 1.11.2
 - Scipy 0.16.0
-- Caffe with up-convolutional: https://github.com/dosovits/caffe-fr-chairs (Branch: deepsim) (both CPU and GPU installation are OK)
+- Caffe with up-convolutional layer: https://github.com/dosovits/caffe-fr-chairs (Branch: deepsim) (both CPU and GPU installation are OK)
 
 ## General description
 
