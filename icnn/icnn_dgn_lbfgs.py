@@ -16,11 +16,15 @@ __author__ = 'sgh'
 # output loss list
 
 # import
+import os
 import numpy as np
+import scipy.io as sio
+import PIL.Image
 import caffe
 from scipy.optimize import minimize
+from datetime import datetime
 
-from .utils import img_deprocess, sort_layer_list, create_feature_masks
+from .utils import img_preprocess, img_deprocess, normalise_img, sort_layer_list, create_feature_masks
 from .loss import switch_loss_fun
 
 
@@ -31,7 +35,8 @@ def reconstruct_image(features, net, net_gen,
                       initial_gen_feat = None,
                       gen_feat_bounds = None,
                       input_layer_gen = None, output_layer_gen = None,
-                      loss_type = 'l2', maxiter = 500, disp = True
+                      loss_type = 'l2', maxiter = 500, disp = True,
+                      save_intermediate = False, save_intermediate_every = 1, save_intermediate_path = None
                       ):
     
     ''' Reconstruct image from CNN features using L-BFGS-B.
@@ -81,6 +86,12 @@ def reconstruct_image(features, net, net_gen,
         The maximum number of iterations.
     disp: bool
         Display the optimization information or not.
+    save_intermediate: bool
+        Save the intermediate reconstruction or not.
+    save_intermediate_every: int
+        Save the intermediate reconstruction for every n iterations.
+    save_intermediate_path: str
+        The path to save the intermediate reconstruction.
     
     Returns
     -------
@@ -93,6 +104,13 @@ def reconstruct_image(features, net, net_gen,
     
     # loss function
     loss_fun = switch_loss_fun(loss_type)
+    
+    # make dir for saving intermediate
+    if save_intermediate:
+        if save_intermediate_path is None:
+            save_intermediate_path = os.path.join('.','recon_img_by_icnn_dgn_lbfgs_' + datetime.now().strftime('%Y%m%dT%H%M%S'))
+        if not os.path.exists(save_intermediate_path):
+            os.makedirs(save_intermediate_path)
     
     # input and output layers of the generator
     gen_layer_list = net_gen.blobs.keys()
@@ -108,6 +126,9 @@ def reconstruct_image(features, net, net_gen,
     if initial_gen_feat is None:
         initial_gen_feat = np.random.normal(0, 1, feat_gen_size)
         initial_gen_feat = np.float32(initial_gen_feat)
+    if save_intermediate:
+        save_name = 'initial_gen_feat.mat'
+        sio.savemat(os.path.join(save_intermediate_path,save_name),{'initial_gen_feat':initial_gen_feat})
     
     # gen feature bounds
     if gen_feat_bounds is None:
@@ -148,7 +169,7 @@ def reconstruct_image(features, net, net_gen,
     # optimization params
     loss_list = []
     opt_params = {
-                'args': (net, features, feature_masks, layer_weight, net_gen, input_layer_gen, output_layer_gen, loss_fun, loss_list),
+                'args': (net, features, feature_masks, layer_weight, net_gen, input_layer_gen, output_layer_gen, loss_fun, save_intermediate, save_intermediate_every, save_intermediate_path, loss_list),
                 
                 'method': 'L-BFGS-B',
                 
@@ -185,7 +206,7 @@ def reconstruct_image(features, net, net_gen,
 
 # objective function
 #loss_list = []
-def obj_fun(feat_gen, net, features, feature_masks, layer_weight, net_gen, input_layer_gen, output_layer_gen, loss_fun, loss_list = []): 
+def obj_fun(feat_gen, net, features, feature_masks, layer_weight, net_gen, input_layer_gen, output_layer_gen, loss_fun, save_intermediate, save_intermediate_every, save_intermediate_path, loss_list = []): 
     #
     #global loss_list
     
@@ -205,6 +226,13 @@ def obj_fun(feat_gen, net, features, feature_masks, layer_weight, net_gen, input
     img_size_gen = net_gen.blobs[output_layer_gen].data.shape[-3:]
     top_left = ((img_size_gen[1] - img_size[1])/2,(img_size_gen[2] - img_size[2])/2)
     img = img0[:,top_left[0]:top_left[0]+img_size[1],top_left[1]:top_left[1]+img_size[2]].copy()
+    
+    # save intermediate image
+    t = len(loss_list)
+    if save_intermediate and (t%save_intermediate_every==0):
+        img_mean = net.transformer.mean['data']
+        save_name = '%05d.jpg'%t
+        PIL.Image.fromarray(normalise_img(img_deprocess(img,img_mean))).save(os.path.join(save_intermediate_path,save_name))
     
     # layer_list
     layer_list = features.keys()
