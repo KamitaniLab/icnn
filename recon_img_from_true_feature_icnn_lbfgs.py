@@ -76,6 +76,10 @@ opts = {
     
     'disp': True, # display or not the information on the terminal
     
+    'save_intermediate': True, # save the intermediate reconstruction or not
+    'save_intermediate_every': 10, # save the intermediate reconstruction for every n iterations
+    'save_intermediate_path': save_path, # the path to save the intermediate reconstruction
+    
     'layer_weight': layer_weight, # a python dictionary consists of weight parameter of each layer in the loss function, arranged in pairs of layer name (key) and weight (value);
     
     'initial_image':None, # the initial image for the optimization (setting to None will use random noise as initial image)
