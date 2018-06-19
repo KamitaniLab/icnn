@@ -14,16 +14,19 @@ __author__ = 'sgh'
 # output loss list
 
 # import
+import os
 import numpy as np
+import PIL.Image
 import caffe
 from scipy.optimize import minimize
+from datetime import datetime
 
-from .utils import img_preprocess, img_deprocess, sort_layer_list, create_feature_masks
+from .utils import img_preprocess, img_deprocess, normalise_img, sort_layer_list, create_feature_masks
 from .loss import switch_loss_fun
 
 # main function
 def reconstruct_image(features, net,
-                      layer_weight = None, channel = None, mask = None, initial_image = None, loss_type = 'l2', maxiter = 500, disp = True):
+                      layer_weight = None, channel = None, mask = None, initial_image = None, loss_type = 'l2', maxiter = 500, disp = True, save_intermediate = False, save_intermediate_every = 1, save_intermediate_path = None):
     
     ''' Reconstruct image from CNN features using L-BFGS-B.
     
@@ -61,6 +64,12 @@ def reconstruct_image(features, net,
         The maximum number of iterations.
     disp: bool
         Display the optimization information or not.
+    save_intermediate: bool
+        Save the intermediate reconstruction or not.
+    save_intermediate_every: int
+        Save the intermediate reconstruction for every n iterations.
+    save_intermediate_path: str
+        The path to save the intermediate reconstruction.
     
     Returns
     -------
@@ -73,6 +82,13 @@ def reconstruct_image(features, net,
     
     # loss function
     loss_fun = switch_loss_fun(loss_type)
+    
+    # make dir for saving intermediate
+    if save_intermediate:
+        if save_intermediate_path is None:
+            save_intermediate_path = os.path.join('.','recon_img_by_icnn_lbfgs_' + datetime.now().strftime('%Y%m%dT%H%M%S'))
+        if not os.path.exists(save_intermediate_path):
+            os.makedirs(save_intermediate_path)
     
     # image size
     img_size = net.blobs['data'].data.shape[-3:]
@@ -91,6 +107,9 @@ def reconstruct_image(features, net,
     # initial image
     if initial_image is None:
         initial_image = np.random.randint(0,256,(img_size[1],img_size[2],img_size[0]))
+    if save_intermediate:
+        save_name = 'initial_image.jpg'
+        PIL.Image.fromarray(np.uint8(initial_image)).save(os.path.join(save_intermediate_path,save_name))
     
     # preprocess initial img
     initial_image = img_preprocess(initial_image,img_mean)
@@ -118,7 +137,7 @@ def reconstruct_image(features, net,
     # optimization params
     loss_list = []
     opt_params = {
-                'args': (net, features, feature_masks, layer_weight, loss_fun, loss_list),
+                'args': (net, features, feature_masks, layer_weight, loss_fun, save_intermediate, save_intermediate_every, save_intermediate_path, loss_list),
                 
                 'method': 'L-BFGS-B',
                 
@@ -146,13 +165,20 @@ def reconstruct_image(features, net,
 
 # objective function
 #loss_list = []
-def obj_fun(img, net, features, feature_masks, layer_weight, loss_fun, loss_list = []):
+def obj_fun(img, net, features, feature_masks, layer_weight, loss_fun, save_intermediate, save_intermediate_every, save_intermediate_path, loss_list = []):
     #
     #global loss_list
     
     # reshape img
     img_size = net.blobs['data'].data.shape[-3:]
     img = img.reshape(img_size)
+    
+    # save intermediate image
+    t = len(loss_list)
+    if save_intermediate and (t%save_intermediate_every==0):
+        img_mean = net.transformer.mean['data']
+        save_name = '%05d.jpg'%t
+        PIL.Image.fromarray(normalise_img(img_deprocess(img,img_mean))).save(os.path.join(save_intermediate_path,save_name))
     
     # layer_list
     layer_list = features.keys()
