@@ -102,6 +102,10 @@ opts = {
     
     'disp':True, # print or not the information on the terminal
     
+    'save_intermediate': True, # save the intermediate reconstruction or not
+    'save_intermediate_every': 10, # save the intermediate reconstruction for every n iterations
+    'save_intermediate_path': save_path, # the path to save the intermediate reconstruction
+    
     'input_layer_gen': input_layer_gen, # name of the input layer of the generator (str)
     'output_layer_gen': output_layer_gen, # name of the output layer of the generator (str)
     
