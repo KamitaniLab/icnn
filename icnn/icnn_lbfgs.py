@@ -108,7 +108,7 @@ def reconstruct_image(features, net,
     if initial_image is None:
         initial_image = np.random.randint(0,256,(img_size[1],img_size[2],img_size[0]))
     if save_intermediate:
-        save_name = 'initial_image.jpg'
+        save_name = 'initial_img.png'
         PIL.Image.fromarray(np.uint8(initial_image)).save(os.path.join(save_intermediate_path,save_name))
     
     # preprocess initial img

@@ -6,4 +6,6 @@
 *.caffemodel
 
 result/
+results_test*/
 tmp/
+junk/
