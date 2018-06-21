@@ -42,82 +42,68 @@ class TestIcnn(unittest.TestCase):
         self.layer_weight = self.__layer_weight()
 
     def test_icnn_gd(self):
-        with open('test/icnn_gd/options.pkl', 'r') as f:
-            opts = pickle.load(f)
+        self.__template_testcase(reconstruct_image_gd, 'test/icnn_gd')
 
-        save_path = 'results_test-' + str(time.time())
-        os.mkdir(save_path)
-
-        opts['save_intermediate_path'] = save_path
-        opts['initial_image'] = PIL.Image.open('./test/icnn_gd/initial_img.png')
-
-        y_test, loss_test = reconstruct_image_gd(self.input_features, self.net, **opts)
-
-        y_true = sio.loadmat('test/icnn_gd/recon_img.mat')['recon_img']
-        loss_true = sio.loadmat('test/icnn_gd/loss_list.mat')['loss_list'][0]
-
-        np.testing.assert_array_equal(y_test, y_true)
-        np.testing.assert_array_equal(loss_test, loss_true)
+    def test_icnn_gd_quick(self):
+        self.__template_testcase(reconstruct_image_gd, 'test/icnn_gd_quick')
 
     def test_icnn_lbfgs(self):
-        with open('test/icnn_lbfgs/options.pkl', 'r') as f:
-            opts = pickle.load(f)
+        self.__template_testcase(reconstruct_image_lbfgs, 'test/icnn_lbfgs')
 
-        save_path = 'results_test-' + str(time.time())
-        os.mkdir(save_path)
-
-        opts['save_intermediate_path'] = save_path
-        opts['initial_image'] = PIL.Image.open('./test/icnn_lbfgs/initial_img.png')
-
-        y_test, loss_test = reconstruct_image_lbfgs(self.input_features, self.net, **opts)
-
-        y_true = sio.loadmat('test/icnn_lbfgs/recon_img.mat')['recon_img']
-        loss_true = sio.loadmat('test/icnn_lbfgs/loss_list.mat')['loss_list'][0]
-
-        np.testing.assert_array_equal(y_test, y_true)
-        np.testing.assert_array_equal(loss_test, loss_true)
+    def test_icnn_lbfgs_quick(self):
+        self.__template_testcase(reconstruct_image_lbfgs, 'test/icnn_lbfgs_quick')
 
     def test_icnn_dgn_gd(self):
-        with open('test/icnn_dgn_gd/options.pkl', 'r') as f:
-            opts = pickle.load(f)
+        self.__template_testcase_dgn(reconstruct_image_dgn_gd, 'test/icnn_dgn_gd')
 
-        save_path = 'results_test-' + str(time.time())
-        os.mkdir(save_path)
-
-        opts['save_intermediate_path'] = save_path
-        opts['initial_gen_feat'] = sio.loadmat('test/icnn_dgn_gd/initial_gen_feat.mat')['initial_gen_feat'][0]
-
-        net_gen = self.__load_gen_net()
-
-        y_test, loss_test = reconstruct_image_dgn_gd(self.input_features, self.net, net_gen, **opts)
-
-        y_true = sio.loadmat('test/icnn_dgn_gd/recon_img.mat')['recon_img']
-        loss_true = sio.loadmat('test/icnn_dgn_gd/loss_list.mat')['loss_list'][0]
-
-        np.testing.assert_array_equal(y_test, y_true)
-        np.testing.assert_array_equal(loss_test, loss_true)
+    def test_icnn_dgn_gd_quick(self):
+        self.__template_testcase_dgn(reconstruct_image_dgn_gd, 'test/icnn_dgn_gd_quick')
 
     def test_icnn_dgn_lbfgs(self):
-        with open('test/icnn_dgn_lbfgs/options.pkl', 'r') as f:
+        self.__template_testcase_dgn(reconstruct_image_dgn_lbfgs, 'test/icnn_dgn_lbfgs')
+
+    def test_icnn_dgn_lbfgs_quick(self):
+        self.__template_testcase_dgn(reconstruct_image_dgn_lbfgs, 'test/icnn_dgn_lbfgs_quick')
+
+    # Private methods ---------------------------------------------------------
+
+    def __template_testcase(self, recon_func, data_dir):
+        with open(os.path.join(data_dir, 'options.pkl'), 'r') as f:
             opts = pickle.load(f)
 
         save_path = 'results_test-' + str(time.time())
         os.mkdir(save_path)
 
         opts['save_intermediate_path'] = save_path
-        opts['initial_gen_feat'] = sio.loadmat('test/icnn_dgn_lbfgs/initial_gen_feat.mat')['initial_gen_feat'][0]
+        opts['initial_image'] = PIL.Image.open(os.path.join(data_dir, 'initial_img.png'))
 
-        net_gen = self.__load_gen_net()
+        y_test, loss_test = recon_func(self.input_features, self.net, **opts)
 
-        y_test, loss_test = reconstruct_image_dgn_lbfgs(self.input_features, self.net, net_gen, **opts)
-
-        y_true = sio.loadmat('test/icnn_dgn_lbfgs/recon_img.mat')['recon_img']
-        loss_true = sio.loadmat('test/icnn_dgn_lbfgs/loss_list.mat')['loss_list'][0]
+        y_true = sio.loadmat(os.path.join(data_dir, 'recon_img.mat'))['recon_img']
+        loss_true = sio.loadmat(os.path.join(data_dir, 'loss_list.mat'))['loss_list'][0]
 
         np.testing.assert_array_equal(y_test, y_true)
         np.testing.assert_array_equal(loss_test, loss_true)
 
-    # Private methods ---------------------------------------------------------
+    def __template_testcase_dgn(self, recon_func, data_dir):
+        with open(os.path.join(data_dir, 'options.pkl'), 'r') as f:
+            opts = pickle.load(f)
+
+        save_path = 'results_test-' + str(time.time())
+        os.mkdir(save_path)
+
+        opts['save_intermediate_path'] = save_path
+        opts['initial_gen_feat'] = sio.loadmat(os.path.join(data_dir, 'initial_gen_feat.mat'))['initial_gen_feat'][0]
+
+        net_gen = self.__load_gen_net()
+
+        y_test, loss_test = recon_func(self.input_features, self.net, net_gen, **opts)
+
+        y_true = sio.loadmat(os.path.join(data_dir, 'recon_img.mat'))['recon_img']
+        loss_true = sio.loadmat(os.path.join(data_dir, 'loss_list.mat'))['loss_list'][0]
+
+        np.testing.assert_array_equal(y_test, y_true)
+        np.testing.assert_array_equal(loss_test, loss_true)
 
     def __load_net(self):
         # Load averaged image of ImageNet
