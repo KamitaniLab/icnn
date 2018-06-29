@@ -25,8 +25,8 @@ from icnn.utils import get_cnn_features, normalise_img
 # Setup Caffe CNN model -------------------------------------------------------
 
 # Load the average image of ImageNet
-img_mean_fn = './data/ilsvrc_2012_mean.npy'
-img_mean = np.load(img_mean_fn)
+img_mean_file = './data/ilsvrc_2012_mean.npy'
+img_mean = np.load(img_mean_file)
 img_mean = np.float32([img_mean[0].mean(), img_mean[1].mean(), img_mean[2].mean()])
 
 # Load CNN model
@@ -38,21 +38,21 @@ net = caffe.Classifier(prototxt_file, model_file,
 h, w = net.blobs['data'].data.shape[-2:]
 net.blobs['data'].reshape(1, 3, h, w)
 
-# Layer list: using all conv and fc layers
-# layer_list = ['conv1_1','conv2_1','conv3_1']
-layer_list = []
-for layer in net.blobs.keys():
-    if 'conv' in layer or 'fc' in layer:
-        layer_list.append(layer)
+# Layer list
+# Example: layer_list = ['conv1_1','conv2_1','conv3_1']
+
+# Use all conv and fc layers
+layer_list = [layer
+              for layer in net.blobs.keys()
+              if 'conv' in layer or 'fc' in layer]
 
 # Setup directories -----------------------------------------------------------
 
 # Make directory for saving the results
 save_dir = './result'
-save_folder = __file__.split('.')[0]
-save_folder = save_folder + '_' + datetime.now().strftime('%Y%m%dT%H%M%S')
-save_path = os.path.join(save_dir, save_folder)
-os.mkdir(save_path)
+save_subdir = __file__.split('.')[0] + '_' + datetime.now().strftime('%Y%m%dT%H%M%S')
+save_path = os.path.join(save_dir, save_subdir)
+os.makedirs(save_path)
 
 # Setup the test image and image features -------------------------------------
 
@@ -72,18 +72,18 @@ PIL.Image.fromarray(orig_img).save(os.path.join(save_path, save_name))
 # Setup layer weights (optional) ----------------------------------------------
 
 # Weight of each layer in the total loss function
-num_of_layer = len(layer_list)
-feat_norm_list = np.zeros(num_of_layer, dtype='float32')
-for j, layer in enumerate(layer_list):
-    # Norm of the CNN features for each layer
-    feat_norm_list[j] = np.linalg.norm(features[layer])
+
+# Norm of the CNN features for each layer
+feat_norm_list = np.array([np.linalg.norm(features[layer]) for layer in layer_list],
+                          dtype='float32')
+
 # Use the inverse of the squared norm of the CNN features as the weight for each layer
 weights = 1. / (feat_norm_list**2)
+
 # Normalise the weights such that the sum of the weights = 1
 weights = weights / weights.sum()
-layer_weight = {}
-for j, layer in enumerate(layer_list):
-    layer_weight[layer] = weights[j]
+
+layer_weight = dict(zip(layer_list, weights))
 
 # Reconstruction --------------------------------------------------------------
 
@@ -151,7 +151,6 @@ opts = {
 save_name = 'options.pkl'
 with open(os.path.join(save_path, save_name), 'w') as f:
     pickle.dump(opts, f)
-    f.close()
 
 # Reconstruction
 recon_img, loss_list = reconstruct_image(features, net, **opts)
