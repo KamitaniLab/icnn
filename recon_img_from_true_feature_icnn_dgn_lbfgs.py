@@ -1,7 +1,10 @@
-# demonstration codes for the usage of "icnn_dgn_lbfgs"
-# the codes will do the following:
-# 1 extract cnn features from a test image;
-# 2 reconstruct the test image from the CNN features;
+'''Demonstration code for icnn_dgn_lbfgs
+
+This script will do the followings:
+
+1. extract cnn features from a test image,
+2. reconstruct the test image from the CNN features.
+'''
 
 
 import os
