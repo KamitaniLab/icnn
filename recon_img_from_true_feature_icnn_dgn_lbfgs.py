@@ -3,7 +3,7 @@
 # 1 extract cnn features from a test image;
 # 2 reconstruct the test image from the CNN features;
 
-# import
+
 import os
 import pickle
 from datetime import datetime
@@ -14,16 +14,19 @@ import scipy.io as sio
 from scipy.misc import imresize
 
 import caffe
+
 from icnn.icnn_dgn_lbfgs import reconstruct_image
 from icnn.utils import get_cnn_features, normalise_img
 
-# average image of ImageNet
+
+# Setup Caffe CNN model -------------------------------------------------------
+
+# Load the average image of ImageNet
 img_mean_fn = './data/ilsvrc_2012_mean.npy'
 img_mean = np.load(img_mean_fn)
-img_mean = np.float32(
-    [img_mean[0].mean(), img_mean[1].mean(), img_mean[2].mean()])
+img_mean = np.float32([img_mean[0].mean(), img_mean[1].mean(), img_mean[2].mean()])
 
-# load cnn model
+# Load CNN model
 model_file = './net/VGG_ILSVRC_19_layers/VGG_ILSVRC_19_layers.caffemodel'
 prototxt_file = './net/VGG_ILSVRC_19_layers/VGG_ILSVRC_19_layers.prototxt'
 channel_swap = (2, 1, 0)
@@ -32,75 +35,75 @@ net = caffe.Classifier(prototxt_file, model_file,
 h, w = net.blobs['data'].data.shape[-2:]
 net.blobs['data'].reshape(1, 3, h, w)
 
-# layer list
-# layer_list = ['conv1_1','conv2_1','conv3_1']
-layer_list = []
-for layer in net.blobs.keys():
-    if 'conv' in layer or 'fc' in layer:  # use all conv and fc layers
-        layer_list.append(layer)
+# Layer list
+# Example: layer_list = ['conv1_1','conv2_1','conv3_1']
 
-# load the generator net
+# Use all conv and fc layers
+layer_list = [layer
+              for layer in net.blobs.keys()
+              if 'conv' in layer or 'fc' in layer]
+
+# Load the generator net
 model_file = './net/generator_for_inverting_fc7/generator.caffemodel'
 prototxt_file = './net/generator_for_inverting_fc7/generator.prototxt'
 net_gen = caffe.Net(prototxt_file, model_file, caffe.TEST)
-input_layer_gen = 'feat'  # input layer for generator net
+input_layer_gen = 'feat'      # input layer for generator net
 output_layer_gen = 'deconv0'  # output layer for generator net
 
-# feature size for input layer of the generator net
+# Feature size for input layer of the generator net
 feat_size_gen = net_gen.blobs[input_layer_gen].data.shape[1:]
 num_of_unit = net_gen.blobs[input_layer_gen].data.size
 
-# upper bound for input layer of the generator net
+# Upper bound for input layer of the generator net
 bound_file = './data/act_range/3x/fc7.txt'
-upper_bound = np.loadtxt(bound_file, delimiter=' ',
-                         usecols=np.arange(0, num_of_unit), unpack=True)
+upper_bound = np.loadtxt(bound_file, delimiter=' ', usecols=np.arange(0, num_of_unit), unpack=True)
 upper_bound = upper_bound.reshape(feat_size_gen)
 
 # gen_feat_bounds
-gen_feat_bounds = []
-for j in xrange(num_of_unit):
-    gen_feat_bounds.append((0., upper_bound[j]))  # the lower bound is 0
-# gen_feat_bounds = []
-# for j0 in xrange(gen_feat_size[0]):
-    # for j1 in xrange(gen_feat_size[1]):
-    # for j2 in xrange(gen_feat_size[2]):
-    # gen_feat_bounds.append((0.,upper_bound[j0]))
+gen_feat_bounds = [(0, up) for up in upper_bound]  # the lower bound is 0
 
-# make folder for saving the results
+# Setup directories -----------------------------------------------------------
+
+# Make directory for saving the results
 save_dir = './result'
-save_folder = __file__.split('.')[0]
-save_folder = save_folder + '_' + datetime.now().strftime('%Y%m%dT%H%M%S')
-save_path = os.path.join(save_dir, save_folder)
-os.mkdir(save_path)
+save_subdir = __file__.split('.')[0] + '_' + datetime.now().strftime('%Y%m%dT%H%M%S')
+save_path = os.path.join(save_dir, save_subdir)
+os.makedirs(save_path)
 
-# original image
+# Setup the test image and image features -------------------------------------
+
+# Test image
 orig_img = PIL.Image.open('./data/orig_img.jpg')
 
-# resize the image to match the input size of the CNN model
+# Resize the image to match the input size of the CNN model
 orig_img = imresize(orig_img, (h, w), interp='bicubic')
 
-# extract CNN features from the original image
+# Extract CNN features from the test image
 features = get_cnn_features(net, orig_img, layer_list)
 
-# save original image
+# Save the test image
 save_name = 'orig_img.jpg'
 PIL.Image.fromarray(orig_img).save(os.path.join(save_path, save_name))
 
-# weight of each layer in the total loss function
-num_of_layer = len(layer_list)
-feat_norm_list = np.zeros(num_of_layer, dtype='float32')
-for j, layer in enumerate(layer_list):
-    # norm of the CNN features for each layer
-    feat_norm_list[j] = np.linalg.norm(features[layer])
-# use the inverse of the squared norm of the CNN features as the weight for each layer
-weights = 1. / (feat_norm_list**2)
-# normalise the weights such that the sum of the weights = 1
-weights = weights / weights.sum()
-layer_weight = {}
-for j, layer in enumerate(layer_list):
-    layer_weight[layer] = weights[j]
+# Setup layer weights (optional) ----------------------------------------------
 
-# reconstruction options
+# Weight of each layer in the total loss function
+
+# Norm of the CNN features for each layer
+feat_norm_list = np.array([np.linalg.norm(features[layer]) for layer in layer_list],
+                          dtype='float32')
+
+# Use the inverse of the squared norm of the CNN features as the weight for each layer
+weights = 1. / (feat_norm_list**2)
+
+# Normalise the weights such that the sum of the weights = 1
+weights = weights / weights.sum()
+
+layer_weight = dict(zip(layer_list, weights))
+
+# Reconstruction --------------------------------------------------------------
+
+# Reconstruction options
 opts = {
 
     'loss_type': 'l2',  # the loss function type: {'l2','l1','inner','gram'}
@@ -143,20 +146,17 @@ opts['initial_gen_feat'] = sio.loadmat(os.path.join(
 save_name = 'options.pkl'
 with open(os.path.join(save_path, save_name), 'w') as f:
     pickle.dump(opts, f)
-    f.close()
 
-# reconstruction
+# Reconstruction
 recon_img, loss_list = reconstruct_image(features, net, net_gen, **opts)
 
-# save the results
+# Save the results ------------------------------------------------------------
+
 save_name = 'recon_img' + '.mat'
 sio.savemat(os.path.join(save_path, save_name), {'recon_img': recon_img})
 
 save_name = 'recon_img' + '.jpg'
-PIL.Image.fromarray(normalise_img(recon_img)).save(
-    os.path.join(save_path, save_name))
+PIL.Image.fromarray(normalise_img(recon_img)).save(os.path.join(save_path, save_name))
 
 save_name = 'loss_list' + '.mat'
 sio.savemat(os.path.join(save_path, save_name), {'loss_list': loss_list})
-
-# end
