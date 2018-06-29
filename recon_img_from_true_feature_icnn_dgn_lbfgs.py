@@ -22,8 +22,8 @@ from icnn.utils import get_cnn_features, normalise_img
 # Setup Caffe CNN model -------------------------------------------------------
 
 # Load the average image of ImageNet
-img_mean_fn = './data/ilsvrc_2012_mean.npy'
-img_mean = np.load(img_mean_fn)
+img_mean_file = './data/ilsvrc_2012_mean.npy'
+img_mean = np.load(img_mean_file)
 img_mean = np.float32([img_mean[0].mean(), img_mean[1].mean(), img_mean[2].mean()])
 
 # Load CNN model
@@ -105,39 +105,53 @@ layer_weight = dict(zip(layer_list, weights))
 
 # Reconstruction options
 opts = {
+    # Loss function type: {'l2', 'l1', 'inner', 'gram'}
+    'loss_type': 'l2',
 
-    'loss_type': 'l2',  # the loss function type: {'l2','l1','inner','gram'}
+    # The maximum number of iterations
+    'maxiter': 3,
 
-    'maxiter': 3,  # the maximum number of iterations
+    # Display the information on the terminal or not
+    'disp': True,
 
-    'disp': True,  # print or not the information on the terminal
-
-    'save_intermediate': True,  # save the intermediate reconstruction or not
-    # save the intermediate reconstruction for every n iterations
+    # Save the intermediate reconstruction or not
+    'save_intermediate': True,
+    # Save the intermediate reconstruction for every n iterations
     'save_intermediate_every': 10,
-    # the path to save the intermediate reconstruction
+    # Path to the directory saving the intermediate reconstruction
     'save_intermediate_path': save_path,
 
-    # name of the input layer of the generator (str)
+    # The input and output layer of the generator (str)
     'input_layer_gen': input_layer_gen,
-    # name of the output layer of the generator (str)
     'output_layer_gen': output_layer_gen,
 
-    # set the boundary for the input layer of the generator
+    # The boundary for the input layer of the generator
     'gen_feat_bounds': gen_feat_bounds,
 
-    # the initial features of the input layer of the generator (setting to None will use random noise as initial features)
-    'initial_gen_feat': None,
-
-    # a python dictionary consists of weight parameter of each layer in the loss function, arranged in pairs of layer name (key) and weight (value);
+    # A python dictionary consists of weight parameter of each layer in the
+    # loss function, arranged in pairs of layer name (key) and weight (value);
     'layer_weight': layer_weight,
 
-    # a python dictionary consists of channels to be selected, arranged in pairs of layer name (key) and channel numbers (value); the channel numbers of each layer are the channels to be used in the loss function; use all the channels if some layer not in the dictionary; setting to None for using all channels for all layers;
-    'channel': None,
-    # a python dictionary consists of masks for the traget CNN features, arranged in pairs of layer name (key) and mask (value); the mask selects units for each layer to be used in the loss function (1: using the uint; 0: excluding the unit); mask can be 3D or 2D numpy array; use all the units if some layer not in the dictionary; setting to None for using all units for all layers;
-    'mask': None,
+    # The initial features of the input layer of the generator (setting to None
+    # will use random noise as initial features)
+    'initial_gen_feat': None,
 
+    # A python dictionary consists of channels to be selected, arranged in
+    # pairs of layer name (key) and channel numbers (value); the channel
+    # numbers of each layer are the channels to be used in the loss function;
+    # use all the channels if some layer not in the dictionary; setting to None
+    # for using all channels for all layers;
+    'channel': None,
+
+    # A python dictionary consists of masks for the traget CNN features,
+    # arranged in pairs of layer name (key) and mask (value); the mask selects
+    # units for each layer to be used in the loss function (1: using the uint;
+    # 0: excluding the unit); mask can be 3D or 2D numpy array; use all the
+    # units if some layer not in the dictionary; setting to None for using all
+    #units for all layers;
+    'mask': None,
 }
+
 
 opts['initial_gen_feat'] = sio.loadmat(os.path.join(
     'test/icnn_dgn_gd_quick', 'initial_gen_feat.mat'))['initial_gen_feat'][0]

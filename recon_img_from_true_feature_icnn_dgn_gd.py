@@ -22,8 +22,8 @@ from icnn.utils import get_cnn_features, normalise_img
 # Setup Caffe CNN model -------------------------------------------------------
 
 # Load the average image of ImageNet
-img_mean_fn = './data/ilsvrc_2012_mean.npy'
-img_mean = np.load(img_mean_fn)
+img_mean_file = './data/ilsvrc_2012_mean.npy'
+img_mean = np.load(img_mean_file)
 img_mean = np.float32([img_mean[0].mean(), img_mean[1].mean(), img_mean[2].mean()])
 
 # Load CNN model
@@ -102,49 +102,65 @@ layer_weight = dict(zip(layer_list, weights))
 
 # Reconstruction options
 opts = {
+    # Loss function type: {'l2', 'l1', 'inner', 'gram'}
+    'loss_type': 'l2',
 
-    'loss_type': 'l2',  # the loss function type: {'l2','l1','inner','gram'}
+    # The total number of iterations for gradient descend
+    'iter_n': 3,
 
-    'iter_n': 3,  # the total number of iterations for gradient descend
+    # Display the information on the terminal for every n iterations
+    'disp_every': 1,
 
-    'disp_every': 1,  # display the information on the terminal for every n iterations
-
-    'save_intermediate': True,  # save the intermediate reconstruction or not
-    # save the intermediate reconstruction for every n iterations
+    # Save the intermediate reconstruction or not
+    'save_intermediate': True,
+    # Save the intermediate reconstruction for every n iterations
     'save_intermediate_every': 10,
-    # the path to save the intermediate reconstruction
+    # Path to the directory saving the intermediate reconstruction
     'save_intermediate_path': save_path,
 
-    'lr_start': 2.,  # learning rate
+    # Learning rate
+    'lr_start': 2.,
     'lr_end': 1e-10,
 
-    'momentum_start': 0.9,  # gradient with momentum
+    # Gradient with momentum
+    'momentum_start': 0.9,
     'momentum_end': 0.9,
 
-    # decay for the features of the input layer of the generator after each iteration
+    # Pixel decay for each iteration
     'decay_start': 0.01,
     'decay_end': 0.01,
 
-    # name of the input layer of the generator (str)
+    # Name of the input layer of the generator
     'input_layer_gen': input_layer_gen,
-    # name of the output layer of the generator (str)
+    # Name of the output layer of the generator
     'output_layer_gen': output_layer_gen,
 
-    # set the upper boundary for the input layer of the generator
+    # Set the upper and lower boundary for the input layer of the generator
     'feat_upper_bound': upper_bound,
-    'feat_lower_bound': 0.,  # set the lower boundary for the input layer of the generator
+    'feat_lower_bound': 0.,
 
-    # a python dictionary consists of weight parameter of each layer in the loss function, arranged in pairs of layer name (key) and weight (value);
+    # A python dictionary consists of weight parameter of each layer in the
+    # loss function, arranged in pairs of layer name (key) and weight (value);
     'layer_weight': layer_weight,
 
-    # the initial features of the input layer of the generator (setting to None will use random noise as initial features)
+    # The initial features of the input layer of the generator (setting to None
+    # will use random noise as initial features)
     'initial_gen_feat': None,
 
-    # a python dictionary consists of channels to be selected, arranged in pairs of layer name (key) and channel numbers (value); the channel numbers of each layer are the channels to be used in the loss function; use all the channels if some layer not in the dictionary; setting to None for using all channels for all layers;
+    # A python dictionary consists of channels to be selected, arranged in
+    # pairs of layer name (key) and channel numbers (value); the channel
+    # numbers of each layer are the channels to be used in the loss function;
+    # use all the channels if some layer not in the dictionary; setting to None
+    # for using all channels for all layers;
     'channel': None,
-    # a python dictionary consists of masks for the traget CNN features, arranged in pairs of layer name (key) and mask (value); the mask selects units for each layer to be used in the loss function (1: using the uint; 0: excluding the unit); mask can be 3D or 2D numpy array; use all the units if some layer not in the dictionary; setting to None for using all units for all layers;
-    'mask': None,
 
+    # A python dictionary consists of masks for the traget CNN features,
+    # arranged in pairs of layer name (key) and mask (value); the mask selects
+    # units for each layer to be used in the loss function (1: using the uint;
+    # 0: excluding the unit); mask can be 3D or 2D numpy array; use all the
+    # units if some layer not in the dictionary; setting to None for using all
+    #units for all layers;
+    'mask': None,
 }
 
 opts['initial_gen_feat'] = sio.loadmat(os.path.join(
