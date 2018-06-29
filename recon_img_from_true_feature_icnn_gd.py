@@ -93,7 +93,7 @@ opts = {
     'loss_type': 'l2',
 
     # The total number of iterations for gradient descend
-    'iter_n': 3,
+    'iter_n': 200,
 
     # Display the information on the terminal for every n iterations
     'disp_every': 1,
