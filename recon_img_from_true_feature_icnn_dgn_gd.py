@@ -133,9 +133,8 @@ opts = {
     'decay_start': 0.01,
     'decay_end': 0.01,
 
-    # Name of the input layer of the generator
+    # The input and output layer of the generator (str)
     'input_layer_gen': input_layer_gen,
-    # Name of the output layer of the generator
     'output_layer_gen': output_layer_gen,
 
     # Set the upper and lower boundary for the input layer of the generator
