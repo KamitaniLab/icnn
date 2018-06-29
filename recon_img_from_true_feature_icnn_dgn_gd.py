@@ -106,7 +106,7 @@ opts = {
     'loss_type': 'l2',
 
     # The total number of iterations for gradient descend
-    'iter_n': 3,
+    'iter_n': 200,
 
     # Display the information on the terminal for every n iterations
     'disp_every': 1,
@@ -163,10 +163,7 @@ opts = {
     'mask': None,
 }
 
-opts['initial_gen_feat'] = sio.loadmat(os.path.join(
-    'test/icnn_dgn_gd_quick', 'initial_gen_feat.mat'))['initial_gen_feat'][0]
-
-# save the optional parameters
+# Save the optional parameters
 save_name = 'options.pkl'
 with open(os.path.join(save_path, save_name), 'w') as f:
     pickle.dump(opts, f)

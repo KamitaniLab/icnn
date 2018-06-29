@@ -93,7 +93,7 @@ opts = {
     'loss_type': 'l2',
 
     # The maximum number of iterations
-    'maxiter': 3,
+    'maxiter': 500,
 
     # Display the information on the terminal or not
     'disp': True,
