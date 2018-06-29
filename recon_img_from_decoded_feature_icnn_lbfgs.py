@@ -1,4 +1,4 @@
-'''Demonstration code for icnn_gd
+'''Demonstration code for icnn_lbfgs
 
 This reconstruct image from the CNN features decoded from the brain.
 '''
