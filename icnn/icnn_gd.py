@@ -14,38 +14,45 @@ __author__ = 'sgh'
 
 # import
 import os
-import numpy as np
-import PIL.Image
-import caffe
 from datetime import datetime
 
-from .utils import img_preprocess, img_deprocess, normalise_img, p_norm, TV_norm, image_norm, gaussian_blur, clip_extreme_value, clip_small_norm, clip_small_contribution, sort_layer_list, create_feature_masks
+import numpy as np
+import PIL.Image
+
+import caffe
+
 from .loss import switch_loss_fun
+from .utils import (TV_norm, clip_extreme_value, clip_small_contribution,
+                    clip_small_norm, create_feature_masks, gaussian_blur,
+                    image_norm, img_deprocess, img_preprocess, normalise_img,
+                    p_norm, sort_layer_list)
+
 
 # main function
+
+
 def reconstruct_image(features, net,
-                      layer_weight = None,
-                      channel = None, mask = None,
-                      initial_image = None,
-                      loss_type = 'l2',
-                      iter_n = 200,
-                      lr_start = 2., lr_end = 1e-10,
-                      momentum_start = 0.9, momentum_end = 0.9,
-                      decay_start = 0.2, decay_end = 1e-10,
-                      grad_normalize = True,
-                      image_jitter = False, jitter_size = 32,
-                      image_blur = True, sigma_start = 2., sigma_end = 0.5,
-                      use_p_norm_reg = False, p = 3, lamda_start = 0.5, lamda_end = 0.5,
-                      use_TV_norm_reg = False, TVbeta = 2, TVlamda_start = 0.5, TVlamda_end = 0.5,
-                      clip_extreme = False, clip_extreme_every = 4, e_pct_start = 1, e_pct_end = 1,
-                      clip_small_norm = False, clip_small_norm_every = 4, n_pct_start = 5., n_pct_end = 5.,
-                      clip_small_contribution = False, clip_small_contribution_every = 4, c_pct_start = 5., c_pct_end = 5.,
-                      disp_every = 1,
-                      save_intermediate = False, save_intermediate_every = 1, save_intermediate_path = None
+                      layer_weight=None,
+                      channel=None, mask=None,
+                      initial_image=None,
+                      loss_type='l2',
+                      iter_n=200,
+                      lr_start=2., lr_end=1e-10,
+                      momentum_start=0.9, momentum_end=0.9,
+                      decay_start=0.2, decay_end=1e-10,
+                      grad_normalize=True,
+                      image_jitter=False, jitter_size=32,
+                      image_blur=True, sigma_start=2., sigma_end=0.5,
+                      use_p_norm_reg=False, p=3, lamda_start=0.5, lamda_end=0.5,
+                      use_TV_norm_reg=False, TVbeta=2, TVlamda_start=0.5, TVlamda_end=0.5,
+                      clip_extreme=False, clip_extreme_every=4, e_pct_start=1, e_pct_end=1,
+                      clip_small_norm=False, clip_small_norm_every=4, n_pct_start=5., n_pct_end=5.,
+                      clip_small_contribution=False, clip_small_contribution_every=4, c_pct_start=5., c_pct_end=5.,
+                      disp_every=1,
+                      save_intermediate=False, save_intermediate_every=1, save_intermediate_path=None
                       ):
-    
     ''' Reconstruct image from CNN features using gradient descent with momentum.
-    
+
     Parameters
     ----------
     features: dict
@@ -53,7 +60,7 @@ def reconstruct_image(features, net,
         The CNN features of multiple layers are assembled in a python dictionary, arranged in pairs of layer name (key) and CNN features (value).
     net: caffe.Classifier or caffe.Net object
         CNN model coresponding to the target CNN features.
-    
+
     Optional Parameters
     ----------
     layer_weight: dict
@@ -170,7 +177,7 @@ def reconstruct_image(features, net,
         Save the intermediate reconstruction for every n iterations.
     save_intermediate_path: str
         The path to save the intermediate reconstruction.
-    
+
     Returns
     -------
     img: ndarray
@@ -179,42 +186,46 @@ def reconstruct_image(features, net,
         The loss for each iteration.
         It is 1 dimensional array of the value of the loss for each iteration.
     '''
-    
+
     # loss function
     loss_fun = switch_loss_fun(loss_type)
-    
+
     # make save dir
     if save_intermediate:
         if save_intermediate_path is None:
-            save_intermediate_path = os.path.join('.','recon_img_by_icnn_gd_' + datetime.now().strftime('%Y%m%dT%H%M%S'))
+            save_intermediate_path = os.path.join(
+                '.', 'recon_img_by_icnn_gd_' + datetime.now().strftime('%Y%m%dT%H%M%S'))
         if not os.path.exists(save_intermediate_path):
             os.makedirs(save_intermediate_path)
-    
+
     # image size
     img_size = net.blobs['data'].data.shape[-3:]
-    
+
     # image mean
     img_mean = net.transformer.mean['data']
-    
+
     # image norm
-    noise_img = np.random.randint(0,256,(img_size[1],img_size[2],img_size[0]))
+    noise_img = np.random.randint(
+        0, 256, (img_size[1], img_size[2], img_size[0]))
     img_norm0 = np.linalg.norm(noise_img)
     img_norm0 = img_norm0/2.
-    
+
     # initial image
     if initial_image is None:
-        initial_image = np.random.randint(0,256,(img_size[1],img_size[2],img_size[0]))
+        initial_image = np.random.randint(
+            0, 256, (img_size[1], img_size[2], img_size[0]))
     if save_intermediate:
         save_name = 'initial_img.png'
-        PIL.Image.fromarray(np.uint8(initial_image)).save(os.path.join(save_intermediate_path,save_name))
-    
+        PIL.Image.fromarray(np.uint8(initial_image)).save(
+            os.path.join(save_intermediate_path, save_name))
+
     # layer_list
     layer_list = features.keys()
-    layer_list = sort_layer_list(net,layer_list)
-    
+    layer_list = sort_layer_list(net, layer_list)
+
     # number of layers
     num_of_layer = len(layer_list)
-    
+
     # layer weight
     if layer_weight is None:
         weights = np.ones(num_of_layer)
@@ -223,32 +234,34 @@ def reconstruct_image(features, net,
         layer_weight = {}
         for j, layer in enumerate(layer_list):
             layer_weight[layer] = weights[j]
-    
+
     # feature mask
-    feature_masks = create_feature_masks(features, masks=mask, channels=channel)
-    
+    feature_masks = create_feature_masks(
+        features, masks=mask, channels=channel)
+
     # iteration for gradient descent
     img = initial_image.copy()
-    img = img_preprocess(img,img_mean)
+    img = img_preprocess(img, img_mean)
     delta_img = np.zeros_like(img)
-    loss_list = np.zeros(iter_n,dtype='float32')
+    loss_list = np.zeros(iter_n, dtype='float32')
     for t in xrange(iter_n):
         # parameters
         lr = lr_start + t * (lr_end - lr_start) / iter_n
-        momentum = momentum_start + t * (momentum_end - momentum_start) / iter_n
+        momentum = momentum_start + t * \
+            (momentum_end - momentum_start) / iter_n
         decay = decay_start + t * (decay_end - decay_start) / iter_n
         sigma = sigma_start + t * (sigma_end - sigma_start) / iter_n
-        
+
         # shift
         if image_jitter:
             ox, oy = np.random.randint(-jitter_size, jitter_size+1, 2)
             img = np.roll(np.roll(img, ox, -1), oy, -2)
             delta_img = np.roll(np.roll(delta_img, ox, -1), oy, -2)
-        
+
         # forward
         net.blobs['data'].data[0] = img.copy()
         net.forward(end=layer_list[-1])
-        
+
         # backward for net
         err = 0.
         loss = 0.
@@ -258,7 +271,7 @@ def reconstruct_image(features, net,
             layer_start_index = num_of_layer - 1 - j
             layer_end_index = num_of_layer - 1 - j - 1
             layer_start = layer_list[layer_start_index]
-            if layer_end_index>=0:
+            if layer_end_index >= 0:
                 layer_end = layer_list[layer_end_index]
             else:
                 layer_end = 'data'
@@ -266,31 +279,31 @@ def reconstruct_image(features, net,
             feat0_j = features[layer_start]
             mask_j = feature_masks[layer_start]
             layer_weight_j = layer_weight[layer_start]
-            loss_j, grad_j = loss_fun(feat_j,feat0_j,mask_j)
+            loss_j, grad_j = loss_fun(feat_j, feat0_j, mask_j)
             loss_j = layer_weight_j * loss_j
             grad_j = layer_weight_j * grad_j
             loss = loss + loss_j
             g = net.blobs[layer_start].diff[0].copy()
             g = g + grad_j
             net.blobs[layer_start].diff[0] = g.copy()
-            if layer_end=='data':
+            if layer_end == 'data':
                 net.backward(start=layer_start)
             else:
-                net.backward(start=layer_start,end=layer_end)
+                net.backward(start=layer_start, end=layer_end)
             net.blobs[layer_start].diff.fill(0.)
         grad = net.blobs['data'].diff[0].copy()
         err = err + loss
         loss_list[t] = loss
-        
+
         # normalize gradient
         if grad_normalize:
             grad_mean = np.abs(grad).mean()
-            if grad_mean>0:
+            if grad_mean > 0:
                 grad = grad / grad_mean
-        
+
         # gradient with momentum
         delta_img = delta_img * momentum + grad
-        
+
         # p norm regularization
         if use_p_norm_reg:
             lamda = lamda_start + t * (lamda_end - lamda_start) / iter_n
@@ -299,66 +312,67 @@ def reconstruct_image(features, net,
             grad_r = grad_r / (img_norm0 ** 2)
             if grad_normalize:
                 grad_mean = np.abs(grad_r).mean()
-                if grad_mean>0:
+                if grad_mean > 0:
                     grad_r = grad_r / grad_mean
             err = err + lamda * loss_r
             delta_img = delta_img + lamda * grad_r
-        
+
         # TV norm regularization
         if use_TV_norm_reg:
-            TVlamda = TVlamda_start + t * (TVlamda_end - TVlamda_start) / iter_n
+            TVlamda = TVlamda_start + t * \
+                (TVlamda_end - TVlamda_start) / iter_n
             loss_r, grad_r = TV_norm(img, opts['TVbeta'])
             loss_r = loss_r / (img_norm0 ** 2)
             grad_r = grad_r / (img_norm0 ** 2)
             if grad_normalize:
                 grad_mean = np.abs(grad_r).mean()
-                if grad_mean>0:
+                if grad_mean > 0:
                     grad_r = grad_r / grad_mean
             err = err + TVlamda * loss_r
             delta_img = delta_img + TVlamda * grad_r
-        
+
         # image update
         img = img - lr * delta_img
-        
+
         # clip pixels with extreme value
-        if clip_extreme and (t+1)%clip_extreme_every==0:
+        if clip_extreme and (t+1) % clip_extreme_every == 0:
             e_pct = e_pct_start + t * (e_pct_end - e_pct_start) / iter_n
-            img = clip_extreme_value(img,e_pct)
-        
+            img = clip_extreme_value(img, e_pct)
+
         # clip pixels with small norm
-        if clip_small_norm and (t+1)%clip_small_norm_every==0:
+        if clip_small_norm and (t+1) % clip_small_norm_every == 0:
             n_pct = n_pct_start + t * (n_pct_end - n_pct_start) / iter_n
-            img = clip_small_norm(img,n_pct)
-        
+            img = clip_small_norm(img, n_pct)
+
         # clip pixels with small contribution
-        if clip_small_contribution and (t+1)%clip_small_contribution_every==0:
+        if clip_small_contribution and (t+1) % clip_small_contribution_every == 0:
             c_pct = c_pct_start + t * (c_pct_end - c_pct_start) / iter_n
-            img = clip_small_contribution(img,grad,c_pct)
-        
+            img = clip_small_contribution(img, grad, c_pct)
+
         # unshift
         if image_jitter:
             img = np.roll(np.roll(img, -ox, -1), -oy, -2)
             delta_img = delta_img - grad
             delta_img = np.roll(np.roll(delta_img, -ox, -1), -oy, -2)
             delta_img = delta_img + grad
-        
+
         # L_2 decay
         img = (1-decay) * img
-        
+
         # gaussian blur
         if image_blur:
-            img = gaussian_blur(img,sigma)
-        
-        # disp info
-        if (t+1)%disp_every==0:
-            print('iter=%d; err=%g;'%(t+1,err))
-        
-        # save image
-        if save_intermediate and ((t+1)%save_intermediate_every==0):
-            save_name = '%05d.jpg'%(t+1)
-            PIL.Image.fromarray(normalise_img(img_deprocess(img,img_mean))).save(os.path.join(save_intermediate_path,save_name))
-            #print(img.dtype)
-    
-    # return img
-    return img_deprocess(img,img_mean), loss_list
+            img = gaussian_blur(img, sigma)
 
+        # disp info
+        if (t+1) % disp_every == 0:
+            print('iter=%d; err=%g;' % (t+1, err))
+
+        # save image
+        if save_intermediate and ((t+1) % save_intermediate_every == 0):
+            save_name = '%05d.jpg' % (t+1)
+            PIL.Image.fromarray(normalise_img(img_deprocess(img, img_mean))).save(
+                os.path.join(save_intermediate_path, save_name))
+            # print(img.dtype)
+
+    # return img
+    return img_deprocess(img, img_mean), loss_list

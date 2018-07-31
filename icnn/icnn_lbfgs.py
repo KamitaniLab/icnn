@@ -15,21 +15,26 @@ __author__ = 'sgh'
 
 # import
 import os
-import numpy as np
-import PIL.Image
-import caffe
-from scipy.optimize import minimize
 from datetime import datetime
 
-from .utils import img_preprocess, img_deprocess, normalise_img, sort_layer_list, create_feature_masks
+import numpy as np
+import PIL.Image
+from scipy.optimize import minimize
+
+import caffe
+
 from .loss import switch_loss_fun
+from .utils import (create_feature_masks, img_deprocess, img_preprocess,
+                    normalise_img, sort_layer_list)
+
 
 # main function
+
+
 def reconstruct_image(features, net,
-                      layer_weight = None, channel = None, mask = None, initial_image = None, loss_type = 'l2', maxiter = 500, disp = True, save_intermediate = False, save_intermediate_every = 1, save_intermediate_path = None):
-    
+                      layer_weight=None, channel=None, mask=None, initial_image=None, loss_type='l2', maxiter=500, disp=True, save_intermediate=False, save_intermediate_every=1, save_intermediate_path=None):
     ''' Reconstruct image from CNN features using L-BFGS-B.
-    
+
     Parameters
     ----------
     features: dict
@@ -37,7 +42,7 @@ def reconstruct_image(features, net,
         The CNN features of multiple layers are assembled in a python dictionary, arranged in pairs of layer name (key) and CNN features (value).
     net: caffe.Classifier or caffe.Net object
         CNN model coresponding to the target CNN features.
-    
+
     Optional Parameters
     ----------
     layer_weight: dict
@@ -70,7 +75,7 @@ def reconstruct_image(features, net,
         Save the intermediate reconstruction for every n iterations.
     save_intermediate_path: str
         The path to save the intermediate reconstruction.
-    
+
     Returns
     -------
     img: ndarray
@@ -79,49 +84,53 @@ def reconstruct_image(features, net,
         The loss for each iteration.
         It is 1 dimensional array of the value of the loss for each iteration.   
     '''
-    
+
     # loss function
     loss_fun = switch_loss_fun(loss_type)
-    
+
     # make dir for saving intermediate
     if save_intermediate:
         if save_intermediate_path is None:
-            save_intermediate_path = os.path.join('.','recon_img_by_icnn_lbfgs_' + datetime.now().strftime('%Y%m%dT%H%M%S'))
+            save_intermediate_path = os.path.join(
+                '.', 'recon_img_by_icnn_lbfgs_' + datetime.now().strftime('%Y%m%dT%H%M%S'))
         if not os.path.exists(save_intermediate_path):
             os.makedirs(save_intermediate_path)
-    
+
     # image size
     img_size = net.blobs['data'].data.shape[-3:]
-    
+
     # num of pixel
     num_of_pix = np.prod(img_size)
-    
+
     # image mean
     img_mean = net.transformer.mean['data']
-    
+
     # img bounds
     img_min = -img_mean
     img_max = img_min + 255.
-    img_bounds = [(img_min[0],img_max[0])]*(num_of_pix/3) + [(img_min[1],img_max[1])]*(num_of_pix/3) + [(img_min[2],img_max[2])]*(num_of_pix/3)
-    
+    img_bounds = [(img_min[0], img_max[0])]*(num_of_pix/3) + [(img_min[1],
+                                                               img_max[1])]*(num_of_pix/3) + [(img_min[2], img_max[2])]*(num_of_pix/3)
+
     # initial image
     if initial_image is None:
-        initial_image = np.random.randint(0,256,(img_size[1],img_size[2],img_size[0]))
+        initial_image = np.random.randint(
+            0, 256, (img_size[1], img_size[2], img_size[0]))
     if save_intermediate:
         save_name = 'initial_img.png'
-        PIL.Image.fromarray(np.uint8(initial_image)).save(os.path.join(save_intermediate_path,save_name))
-    
+        PIL.Image.fromarray(np.uint8(initial_image)).save(
+            os.path.join(save_intermediate_path, save_name))
+
     # preprocess initial img
-    initial_image = img_preprocess(initial_image,img_mean)
+    initial_image = img_preprocess(initial_image, img_mean)
     initial_image = initial_image.flatten()
-    
+
     # layer_list
     layer_list = features.keys()
-    layer_list = sort_layer_list(net,layer_list)
-    
+    layer_list = sort_layer_list(net, layer_list)
+
     # number of layers
     num_of_layer = len(layer_list)
-    
+
     # layer weight
     if layer_weight is None:
         weights = np.ones(num_of_layer)
@@ -130,67 +139,71 @@ def reconstruct_image(features, net,
         layer_weight = {}
         for j, layer in enumerate(layer_list):
             layer_weight[layer] = weights[j]
-    
+
     # feature mask
-    feature_masks = create_feature_masks(features, masks=mask, channels=channel)
-    
+    feature_masks = create_feature_masks(
+        features, masks=mask, channels=channel)
+
     # optimization params
     loss_list = []
     opt_params = {
-                'args': (net, features, feature_masks, layer_weight, loss_fun, save_intermediate, save_intermediate_every, save_intermediate_path, loss_list),
-                
-                'method': 'L-BFGS-B',
-                
-                'jac': True,
-                
-                'bounds': img_bounds,
-                
-                'options': {'maxiter': maxiter, 'disp': disp},                
-                }
-    
+        'args': (net, features, feature_masks, layer_weight, loss_fun, save_intermediate, save_intermediate_every, save_intermediate_path, loss_list),
+
+        'method': 'L-BFGS-B',
+
+        'jac': True,
+
+        'bounds': img_bounds,
+
+        'options': {'maxiter': maxiter, 'disp': disp},
+    }
+
     # optimization
     #global loss_list
     #loss_list = []
-    res = minimize(obj_fun,initial_image,**opt_params)
-    
+    res = minimize(obj_fun, initial_image, **opt_params)
+
     #
-    #print(type(res))
-    
+    # print(type(res))
+
     # recon img
     img = res.x
     img = img.reshape(img_size)
-    
+
     # return img
-    return img_deprocess(img,img_mean), loss_list
+    return img_deprocess(img, img_mean), loss_list
 
 # objective function
 #loss_list = []
-def obj_fun(img, net, features, feature_masks, layer_weight, loss_fun, save_intermediate, save_intermediate_every, save_intermediate_path, loss_list = []):
+
+
+def obj_fun(img, net, features, feature_masks, layer_weight, loss_fun, save_intermediate, save_intermediate_every, save_intermediate_path, loss_list=[]):
     #
     #global loss_list
-    
+
     # reshape img
     img_size = net.blobs['data'].data.shape[-3:]
     img = img.reshape(img_size)
-    
+
     # save intermediate image
     t = len(loss_list)
-    if save_intermediate and (t%save_intermediate_every==0):
+    if save_intermediate and (t % save_intermediate_every == 0):
         img_mean = net.transformer.mean['data']
-        save_name = '%05d.jpg'%t
-        PIL.Image.fromarray(normalise_img(img_deprocess(img,img_mean))).save(os.path.join(save_intermediate_path,save_name))
-    
+        save_name = '%05d.jpg' % t
+        PIL.Image.fromarray(normalise_img(img_deprocess(img, img_mean))).save(
+            os.path.join(save_intermediate_path, save_name))
+
     # layer_list
     layer_list = features.keys()
-    layer_list = sort_layer_list(net,layer_list)
-    
+    layer_list = sort_layer_list(net, layer_list)
+
     # num_of_layer
     num_of_layer = len(layer_list)
-    
+
     # cnn forward
     net.blobs['data'].data[0] = img.copy()
     net.forward(end=layer_list[-1])
-    
+
     # cnn backward
     loss = 0.
     layer_start = layer_list[-1]
@@ -199,7 +212,7 @@ def obj_fun(img, net, features, feature_masks, layer_weight, loss_fun, save_inte
         layer_start_index = num_of_layer - 1 - j
         layer_end_index = num_of_layer - 1 - j - 1
         layer_start = layer_list[layer_start_index]
-        if layer_end_index>=0:
+        if layer_end_index >= 0:
             layer_end = layer_list[layer_end_index]
         else:
             layer_end = 'data'
@@ -207,27 +220,26 @@ def obj_fun(img, net, features, feature_masks, layer_weight, loss_fun, save_inte
         feat0_j = features[layer_start]
         mask_j = feature_masks[layer_start]
         layer_weight_j = layer_weight[layer_start]
-        loss_j, grad_j = loss_fun(feat_j,feat0_j,mask_j)
+        loss_j, grad_j = loss_fun(feat_j, feat0_j, mask_j)
         loss_j = layer_weight_j * loss_j
         grad_j = layer_weight_j * grad_j
         loss = loss + loss_j
         g = net.blobs[layer_start].diff[0].copy()
         g = g + grad_j
         net.blobs[layer_start].diff[0] = g.copy()
-        if layer_end=='data':
+        if layer_end == 'data':
             net.backward(start=layer_start)
         else:
-            net.backward(start=layer_start,end=layer_end)
+            net.backward(start=layer_start, end=layer_end)
         net.blobs[layer_start].diff.fill(0.)
     grad = net.blobs['data'].diff[0].copy()
-    
+
     # reshape gradient
     grad = grad.flatten().astype(np.float64)
-    #print('grad=')
-    #print(np.mean(np.abs(grad)))
-    
+    # print('grad=')
+    # print(np.mean(np.abs(grad)))
+
     #
     loss_list.append(loss)
-    
-    return loss, grad
 
+    return loss, grad
