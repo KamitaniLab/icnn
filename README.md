@@ -34,6 +34,12 @@ The **icnn_gd** implements the image reconstruction algorithm using gradient des
     - https://github.com/dosovits/caffe-fr-chairs (Branch: deepsim)
     - Both CPU and GPU installation are OK
 
+## Installation
+
+``` shellsession
+$ pip install git+https://github.com/KamitaniLab/icnn.git
+```
+
 ## Basic Usage
 
 ### "icnn_gd" and "icnn_lbfgs"
