@@ -1,14 +1,9 @@
-#! /usr/bin/env python
-# -*- coding: utf-8 -*-
+'''Utility functions for icnn.
 
-'''utility functions'''
-
-# Author: Shen Guo-Hua <shen-gh@atr.jp>
-
-__author__ = 'sgh'
+Author: Shen Guo-Hua <shen-gh@atr.jp>
+'''
 
 
-# import
 import numpy as np
 import PIL.Image
 import scipy.io as sio
@@ -17,8 +12,6 @@ from scipy.misc import imresize
 
 import caffe
 
-
-# utility functions
 
 def img_preprocess(img, img_mean=np.float32([104, 117, 123])):
     '''convert to Caffe's input image layout'''
@@ -247,6 +240,3 @@ def estimate_cnn_feat_std(cnn_feat):
             cnn_feat_std[j] = np.std(feat_ch)
         cnn_feat_std = np.mean(cnn_feat_std)  # std averaged across channels
     return cnn_feat_std
-
-
-# end

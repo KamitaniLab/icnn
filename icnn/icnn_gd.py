@@ -1,18 +1,9 @@
-#! /usr/bin/env python
-# -*- coding: utf-8 -*-
+'''Invert CNN feature to reconstruct image: Reconstruct image from CNN features using gradient descent with momentum.
 
-'''invert CNN feature to reconstruct image'''
+Author: Shen Guo-Hua <shen-gh@atr.jp>
+'''
 
-# Author: Shen Guo-Hua <shen-gh@atr.jp>
 
-__author__ = 'sgh'
-
-# v1_2_5
-# use equal weights for each layer as default
-# add gram matrix loss
-# output the loss
-
-# import
 import os
 from datetime import datetime
 
@@ -22,13 +13,7 @@ import PIL.Image
 import caffe
 
 from .loss import switch_loss_fun
-from .utils import (TV_norm, clip_extreme_value, clip_small_contribution,
-                    clip_small_norm, create_feature_masks, gaussian_blur,
-                    image_norm, img_deprocess, img_preprocess, normalise_img,
-                    p_norm, sort_layer_list)
-
-
-# main function
+from .utils import TV_norm, clip_extreme_value, clip_small_contribution, clip_small_norm, create_feature_masks, gaussian_blur, image_norm, img_deprocess, img_preprocess, normalise_img, p_norm, sort_layer_list
 
 
 def reconstruct_image(features, net,
@@ -51,7 +36,7 @@ def reconstruct_image(features, net,
                       disp_every=1,
                       save_intermediate=False, save_intermediate_every=1, save_intermediate_path=None
                       ):
-    ''' Reconstruct image from CNN features using gradient descent with momentum.
+    '''Reconstruct image from CNN features using gradient descent with momentum.
 
     Parameters
     ----------
@@ -193,8 +178,7 @@ def reconstruct_image(features, net,
     # make save dir
     if save_intermediate:
         if save_intermediate_path is None:
-            save_intermediate_path = os.path.join(
-                '.', 'recon_img_by_icnn_gd_' + datetime.now().strftime('%Y%m%dT%H%M%S'))
+            save_intermediate_path = os.path.join('.', 'recon_img_by_icnn_gd_' + datetime.now().strftime('%Y%m%dT%H%M%S'))
         if not os.path.exists(save_intermediate_path):
             os.makedirs(save_intermediate_path)
 
@@ -205,19 +189,16 @@ def reconstruct_image(features, net,
     img_mean = net.transformer.mean['data']
 
     # image norm
-    noise_img = np.random.randint(
-        0, 256, (img_size[1], img_size[2], img_size[0]))
+    noise_img = np.random.randint(0, 256, (img_size[1], img_size[2], img_size[0]))
     img_norm0 = np.linalg.norm(noise_img)
     img_norm0 = img_norm0/2.
 
     # initial image
     if initial_image is None:
-        initial_image = np.random.randint(
-            0, 256, (img_size[1], img_size[2], img_size[0]))
+        initial_image = np.random.randint(0, 256, (img_size[1], img_size[2], img_size[0]))
     if save_intermediate:
         save_name = 'initial_img.png'
-        PIL.Image.fromarray(np.uint8(initial_image)).save(
-            os.path.join(save_intermediate_path, save_name))
+        PIL.Image.fromarray(np.uint8(initial_image)).save(os.path.join(save_intermediate_path, save_name))
 
     # layer_list
     layer_list = features.keys()
@@ -236,8 +217,7 @@ def reconstruct_image(features, net,
             layer_weight[layer] = weights[j]
 
     # feature mask
-    feature_masks = create_feature_masks(
-        features, masks=mask, channels=channel)
+    feature_masks = create_feature_masks(features, masks=mask, channels=channel)
 
     # iteration for gradient descent
     img = initial_image.copy()
@@ -247,8 +227,7 @@ def reconstruct_image(features, net,
     for t in xrange(iter_n):
         # parameters
         lr = lr_start + t * (lr_end - lr_start) / iter_n
-        momentum = momentum_start + t * \
-            (momentum_end - momentum_start) / iter_n
+        momentum = momentum_start + t * (momentum_end - momentum_start) / iter_n
         decay = decay_start + t * (decay_end - decay_start) / iter_n
         sigma = sigma_start + t * (sigma_end - sigma_start) / iter_n
 
@@ -319,8 +298,7 @@ def reconstruct_image(features, net,
 
         # TV norm regularization
         if use_TV_norm_reg:
-            TVlamda = TVlamda_start + t * \
-                (TVlamda_end - TVlamda_start) / iter_n
+            TVlamda = TVlamda_start + t * (TVlamda_end - TVlamda_start) / iter_n
             loss_r, grad_r = TV_norm(img, opts['TVbeta'])
             loss_r = loss_r / (img_norm0 ** 2)
             grad_r = grad_r / (img_norm0 ** 2)
@@ -370,9 +348,7 @@ def reconstruct_image(features, net,
         # save image
         if save_intermediate and ((t+1) % save_intermediate_every == 0):
             save_name = '%05d.jpg' % (t+1)
-            PIL.Image.fromarray(normalise_img(img_deprocess(img, img_mean))).save(
-                os.path.join(save_intermediate_path, save_name))
-            # print(img.dtype)
+            PIL.Image.fromarray(normalise_img(img_deprocess(img, img_mean))).save(os.path.join(save_intermediate_path, save_name))
 
     # return img
     return img_deprocess(img, img_mean), loss_list

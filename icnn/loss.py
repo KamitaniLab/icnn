@@ -1,18 +1,10 @@
-#! /usr/bin/env python
-# -*- coding: utf-8 -*-
+'''Loss functions.
 
-'''loss functions'''
-
-# Author: Shen Guo-Hua <shen-gh@atr.jp>
-
-__author__ = 'sgh'
+Author: Shen Guo-Hua <shen-gh@atr.jp>
+'''
 
 
-# import
 import numpy as np
-
-
-# loss functions
 
 
 def L2_loss(feat, feat0, mask=1.):

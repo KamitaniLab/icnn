@@ -1,19 +1,9 @@
-#! /usr/bin/env python
-# -*- coding: utf-8 -*-
+'''Invert CNN feature to reconstruct image: Reconstruct image from CNN features using L-BFGS-B.
 
-'''invert CNN feature to reconstruct image'''
+Author: Shen Guo-Hua <shen-gh@atr.jp>
+'''
 
-# Author: Shen Guo-Hua <shen-gh@atr.jp>
 
-__author__ = 'sgh'
-
-# v4_2_5
-# recon img from cnn feat
-# for multiple layers
-# use the ’L-BFGS-B’ as optimization method
-# output loss list
-
-# import
 import os
 from datetime import datetime
 
@@ -24,16 +14,12 @@ from scipy.optimize import minimize
 import caffe
 
 from .loss import switch_loss_fun
-from .utils import (create_feature_masks, img_deprocess, img_preprocess,
-                    normalise_img, sort_layer_list)
-
-
-# main function
+from .utils import create_feature_masks, img_deprocess, img_preprocess, normalise_img, sort_layer_list
 
 
 def reconstruct_image(features, net,
                       layer_weight=None, channel=None, mask=None, initial_image=None, loss_type='l2', maxiter=500, disp=True, save_intermediate=False, save_intermediate_every=1, save_intermediate_path=None):
-    ''' Reconstruct image from CNN features using L-BFGS-B.
+    '''Reconstruct image from CNN features using L-BFGS-B.
 
     Parameters
     ----------
@@ -91,8 +77,7 @@ def reconstruct_image(features, net,
     # make dir for saving intermediate
     if save_intermediate:
         if save_intermediate_path is None:
-            save_intermediate_path = os.path.join(
-                '.', 'recon_img_by_icnn_lbfgs_' + datetime.now().strftime('%Y%m%dT%H%M%S'))
+            save_intermediate_path = os.path.join('.', 'recon_img_by_icnn_lbfgs_' + datetime.now().strftime('%Y%m%dT%H%M%S'))
         if not os.path.exists(save_intermediate_path):
             os.makedirs(save_intermediate_path)
 
@@ -113,12 +98,10 @@ def reconstruct_image(features, net,
 
     # initial image
     if initial_image is None:
-        initial_image = np.random.randint(
-            0, 256, (img_size[1], img_size[2], img_size[0]))
+        initial_image = np.random.randint(0, 256, (img_size[1], img_size[2], img_size[0]))
     if save_intermediate:
         save_name = 'initial_img.png'
-        PIL.Image.fromarray(np.uint8(initial_image)).save(
-            os.path.join(save_intermediate_path, save_name))
+        PIL.Image.fromarray(np.uint8(initial_image)).save(os.path.join(save_intermediate_path, save_name))
 
     # preprocess initial img
     initial_image = img_preprocess(initial_image, img_mean)
@@ -141,8 +124,7 @@ def reconstruct_image(features, net,
             layer_weight[layer] = weights[j]
 
     # feature mask
-    feature_masks = create_feature_masks(
-        features, masks=mask, channels=channel)
+    feature_masks = create_feature_masks(features, masks=mask, channels=channel)
 
     # optimization params
     loss_list = []
@@ -159,12 +141,7 @@ def reconstruct_image(features, net,
     }
 
     # optimization
-    #global loss_list
-    #loss_list = []
     res = minimize(obj_fun, initial_image, **opt_params)
-
-    #
-    # print(type(res))
 
     # recon img
     img = res.x
@@ -173,14 +150,8 @@ def reconstruct_image(features, net,
     # return img
     return img_deprocess(img, img_mean), loss_list
 
-# objective function
-#loss_list = []
-
 
 def obj_fun(img, net, features, feature_masks, layer_weight, loss_fun, save_intermediate, save_intermediate_every, save_intermediate_path, loss_list=[]):
-    #
-    #global loss_list
-
     # reshape img
     img_size = net.blobs['data'].data.shape[-3:]
     img = img.reshape(img_size)
@@ -190,8 +161,7 @@ def obj_fun(img, net, features, feature_masks, layer_weight, loss_fun, save_inte
     if save_intermediate and (t % save_intermediate_every == 0):
         img_mean = net.transformer.mean['data']
         save_name = '%05d.jpg' % t
-        PIL.Image.fromarray(normalise_img(img_deprocess(img, img_mean))).save(
-            os.path.join(save_intermediate_path, save_name))
+        PIL.Image.fromarray(normalise_img(img_deprocess(img, img_mean))).save(os.path.join(save_intermediate_path, save_name))
 
     # layer_list
     layer_list = features.keys()
@@ -236,10 +206,7 @@ def obj_fun(img, net, features, feature_masks, layer_weight, loss_fun, save_inte
 
     # reshape gradient
     grad = grad.flatten().astype(np.float64)
-    # print('grad=')
-    # print(np.mean(np.abs(grad)))
 
-    #
     loss_list.append(loss)
 
     return loss, grad

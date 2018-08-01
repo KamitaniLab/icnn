@@ -1,20 +1,9 @@
-#! /usr/bin/env python
-# -*- coding: utf-8 -*-
+'''Invert CNN feature to reconstruct image: Reconstruct image from CNN features using gradient descent with momentum and a deep generator network.
 
-'''invert CNN feature to reconstruct image'''
-
-# Author: Shen Guo-Hua <shen-gh@atr.jp>
-
-__author__ = 'sgh'
+Author: Shen Guo-Hua <shen-gh@atr.jp>
+'''
 
 
-# v1_2_5
-# recon img from cnn feat
-# for multiple layers
-# optimize in the feature space of a generator net
-# output loss list
-
-# import
 import os
 from datetime import datetime
 
@@ -25,11 +14,7 @@ import scipy.io as sio
 import caffe
 
 from .loss import switch_loss_fun
-from .utils import (create_feature_masks, img_deprocess, normalise_img,
-                    sort_layer_list)
-
-
-# main function
+from .utils import create_feature_masks, img_deprocess, normalise_img, sort_layer_list
 
 
 def reconstruct_image(features, net, net_gen,
@@ -46,8 +31,7 @@ def reconstruct_image(features, net, net_gen,
                       disp_every=1,
                       save_intermediate=False, save_intermediate_every=1, save_intermediate_path=None
                       ):
-    ''' Reconstruct image from CNN features using gradient descent with momentum.
-        Constrain the reconstrcuted image via a deep generator net.
+    '''Reconstruct image from CNN features using gradient descent with momentum and a deep generator network.
 
     Parameters
     ----------
@@ -133,8 +117,7 @@ def reconstruct_image(features, net, net_gen,
     # make save dir
     if save_intermediate:
         if save_intermediate_path is None:
-            save_intermediate_path = os.path.join(
-                '.', 'recon_img_by_icnn_dgn_gd_' + datetime.now().strftime('%Y%m%dT%H%M%S'))
+            save_intermediate_path = os.path.join('.', 'recon_img_by_icnn_dgn_gd_' + datetime.now().strftime('%Y%m%dT%H%M%S'))
         if not os.path.exists(save_intermediate_path):
             os.makedirs(save_intermediate_path)
 
@@ -154,8 +137,7 @@ def reconstruct_image(features, net, net_gen,
         initial_gen_feat = np.float32(initial_gen_feat)
     if save_intermediate:
         save_name = 'initial_gen_feat.mat'
-        sio.savemat(os.path.join(save_intermediate_path, save_name), {
-                    'initial_gen_feat': initial_gen_feat})
+        sio.savemat(os.path.join(save_intermediate_path, save_name), {'initial_gen_feat': initial_gen_feat})
 
     # image size
     img_size = net.blobs['data'].data.shape[-3:]
@@ -185,8 +167,7 @@ def reconstruct_image(features, net, net_gen,
             layer_weight[layer] = weights[j]
 
     # feature mask
-    feature_masks = create_feature_masks(
-        features, masks=mask, channels=channel)
+    feature_masks = create_feature_masks(features, masks=mask, channels=channel)
 
     # iteration for gradient descent
     feat_gen = initial_gen_feat.copy()
@@ -197,8 +178,7 @@ def reconstruct_image(features, net, net_gen,
         # parameters
         lr = lr_start + t * (lr_end - lr_start) / iter_n
         decay = decay_start + t * (decay_end - decay_start) / iter_n
-        momentum = momentum_start + t * \
-            (momentum_end - momentum_start) / iter_n
+        momentum = momentum_start + t * (momentum_end - momentum_start) / iter_n
 
         # forward for generator
         net_gen.blobs[input_layer_gen].data[0] = feat_gen.copy()
@@ -212,8 +192,7 @@ def reconstruct_image(features, net, net_gen,
                    top_left[1]:top_left[1]+img_size[2]].copy()
         if t == 0 and save_intermediate:
             save_name = 'initial_img.jpg'
-            PIL.Image.fromarray(np.uint8(img_deprocess(img, img_mean))).save(
-                os.path.join(save_intermediate_path, save_name))
+            PIL.Image.fromarray(np.uint8(img_deprocess(img, img_mean))).save(os.path.join(save_intermediate_path, save_name))
 
         # forward for net
         net.blobs['data'].data[0] = img.copy()
@@ -292,9 +271,7 @@ def reconstruct_image(features, net, net_gen,
         # save image
         if save_intermediate and ((t+1) % save_intermediate_every == 0):
             save_name = '%05d.jpg' % (t+1)
-            PIL.Image.fromarray(normalise_img(img_deprocess(img, img_mean))).save(
-                os.path.join(save_intermediate_path, save_name))
-            # print(img.dtype)
+            PIL.Image.fromarray(normalise_img(img_deprocess(img, img_mean))).save(os.path.join(save_intermediate_path, save_name))
 
     # return img
     return img_deprocess(img, img_mean), loss_list
