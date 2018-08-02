@@ -95,13 +95,13 @@ class TestIcnn(unittest.TestCase):
 
     def __load_net(self):
         # Load averaged image of ImageNet
-        img_mean_file = './data/ilsvrc_2012_mean.npy'
+        img_mean_file = './examples/data/ilsvrc_2012_mean.npy'
         img_mean = np.load(img_mean_file)
         img_mean = np.float32([img_mean[0].mean(), img_mean[1].mean(), img_mean[2].mean()])
 
         # Load CNN model
-        model_file = './net/VGG_ILSVRC_19_layers/VGG_ILSVRC_19_layers.caffemodel'
-        prototxt_file = './net/VGG_ILSVRC_19_layers/VGG_ILSVRC_19_layers.prototxt'
+        model_file = './examples/net/VGG_ILSVRC_19_layers/VGG_ILSVRC_19_layers.caffemodel'
+        prototxt_file = './examples/net/VGG_ILSVRC_19_layers/VGG_ILSVRC_19_layers.prototxt'
         channel_swap = (2, 1, 0)
         net = caffe.Classifier(prototxt_file, model_file,
                                mean=img_mean, channel_swap=channel_swap)
@@ -111,8 +111,8 @@ class TestIcnn(unittest.TestCase):
         return net
 
     def __load_gen_net(self):
-        model_file = './net/generator_for_inverting_fc7/generator.caffemodel'
-        prototxt_file = './net/generator_for_inverting_fc7/generator.prototxt'
+        model_file = './examples/net/generator_for_inverting_fc7/generator.caffemodel'
+        prototxt_file = './examples/net/generator_for_inverting_fc7/generator.prototxt'
         net_gen = caffe.Net(prototxt_file, model_file, caffe.TEST)
 
         return net_gen
@@ -121,7 +121,7 @@ class TestIcnn(unittest.TestCase):
         h, w = self.net.blobs['data'].data.shape[-2:]
 
         # Load the original image
-        orig_img = PIL.Image.open('./data/orig_img.jpg')
+        orig_img = PIL.Image.open('./examples/data/orig_img.jpg')
         orig_img = imresize(orig_img, (h, w), interp='bicubic')
 
         # Load input image features
