@@ -6,4 +6,4 @@ You can download them at [icnn example dat@figshare](https://figshare.com/articl
 
 - [decoded_vgg19_cnn_feat.mat](https://ndownloader.figshare.com/files/12565685)
 - [estimated_vgg19_cnn_feat_std.mat](https://ndownloader.figshare.com/files/12565688)
-- [ilsvrc_2012_mean..npy](https://ndownloader.figshare.com/files/12565694)
+- [ilsvrc_2012_mean.npy](https://ndownloader.figshare.com/files/12565694)
