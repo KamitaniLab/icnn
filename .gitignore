@@ -2,6 +2,9 @@
 ._*
 
 *.pyc
+build/
+dist/
+*.egg-info/
 
 *.caffemodel
 
