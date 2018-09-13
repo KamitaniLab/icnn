@@ -27,7 +27,7 @@ The **icnn_gd** implements the image reconstruction algorithm using gradient des
 ## Requirements
 
 - Python 2.7
-    - Python 3 support is upcomming
+    - Python 3 support is upcoming
 - Numpy
 - Scipy
 - Caffe with up-convolutional layer
