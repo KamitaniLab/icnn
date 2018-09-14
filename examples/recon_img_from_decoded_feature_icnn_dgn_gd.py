@@ -48,7 +48,7 @@ model_file = './net/generator_for_inverting_fc7/generator.caffemodel'
 prototxt_file = './net/generator_for_inverting_fc7/generator.prototxt'
 net_gen = caffe.Net(prototxt_file, model_file, caffe.TEST)
 input_layer_gen = 'feat'      # input layer for generator net
-output_layer_gen = 'deconv0'  # output layer for generator net
+output_layer_gen = 'generated'  # output layer for generator net
 
 # Feature size for input layer of the generator net
 feat_size_gen = net_gen.blobs[input_layer_gen].data.shape[1:]
