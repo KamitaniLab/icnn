@@ -6,7 +6,7 @@ from setuptools import setup
 
 if __name__ == '__main__':
     setup(name='icnn',
-          version='1.0',
+          version='1.0.1',
           description='Inverting CNN',
           author='Shen Guo-Hua, Kei Majima',
           author_email='kamitanilab.contact@gmail.com',
