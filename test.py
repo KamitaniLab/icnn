@@ -88,6 +88,7 @@ class TestIcnn(unittest.TestCase):
     def __template_testcase_dgn(self, recon_func, data_dir):
         with open(os.path.join(data_dir, 'options.pkl'), 'r') as f:
             opts = pickle.load(f)
+            opts['output_layer_gen'] = 'generated'
 
         save_path = 'results_test-' + str(time.time())
         os.mkdir(save_path)
