@@ -13,7 +13,7 @@ import PIL.Image
 import caffe
 
 from .loss import switch_loss_fun
-from .utils import TV_norm, clip_extreme_value, clip_small_contribution, clip_small_norm, create_feature_masks, gaussian_blur, image_norm, img_deprocess, img_preprocess, normalise_img, p_norm, sort_layer_list
+from .utils import TV_norm, clip_extreme_value, clip_small_contribution_pixel, clip_small_norm_pixel, create_feature_masks, gaussian_blur, image_norm, img_deprocess, img_preprocess, normalise_img, p_norm, sort_layer_list
 
 
 def reconstruct_image(features, net,
@@ -320,12 +320,12 @@ def reconstruct_image(features, net,
         # clip pixels with small norm
         if clip_small_norm and (t+1) % clip_small_norm_every == 0:
             n_pct = n_pct_start + t * (n_pct_end - n_pct_start) / iter_n
-            img = clip_small_norm(img, n_pct)
+            img = clip_small_norm_pixel(img, n_pct)
 
         # clip pixels with small contribution
         if clip_small_contribution and (t+1) % clip_small_contribution_every == 0:
             c_pct = c_pct_start + t * (c_pct_end - c_pct_start) / iter_n
-            img = clip_small_contribution(img, grad, c_pct)
+            img = clip_small_contribution_pixel(img, grad, c_pct)
 
         # unshift
         if image_jitter:

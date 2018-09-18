@@ -110,7 +110,7 @@ def clip_extreme_value(img, pct=1):
     return img
 
 
-def clip_small_norm(img, pct=1):
+def clip_small_norm_pixel(img, pct=1):
     '''clip pixels with small RGB norm'''
     if pct < 0:
         pct = 0.
@@ -127,7 +127,7 @@ def clip_small_norm(img, pct=1):
     return img
 
 
-def clip_small_contribution(img, grad, pct=1):
+def clip_small_contribution_pixel(img, grad, pct=1):
     '''clip pixels with small contribution'''
     if pct < 0:
         pct = 0.
