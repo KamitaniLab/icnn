@@ -145,6 +145,40 @@ In order to make back-propagation work, one line should be added to the prototxt
 
 `force_backward: true`.
 
+
+## Changing batch size to speed reconstruction process
+The reconstruction is designed to reconstruct one image each time, while the CNN model and deep generator net process batch of data for each forward and backward computation.
+In order to avoid irrelevant calculation and speed the reconstruction process, we can modify the batch size to  be 1.
+For example, we set the first dimension (batch size) to 1 in the prototxt of the deep generator net (/examples/net/generator_for_inverting_fc7/generator.prototxt):
+
+```
+...
+input: "feat"
+input_shape {
+  dim: 1  # 64 --> 1
+  dim: 4096
+}
+
+...
+
+layer {
+  name: "reshape_relu_defc5"
+  type: "Reshape"
+  bottom: "relu_defc5"
+  top: "reshape_relu_defc5"
+  reshape_param {
+    shape {
+      dim: 1  # 64 --> 1
+      dim: 256
+      dim: 4
+      dim: 4
+    }
+  }
+}
+...
+```
+
+
 ## Reference
 
 - [1] Shen G, Horikawa T, Majima K, and Kamitani Y (2017). Deep image reconstruction from human brain activity. https://www.biorxiv.org/content/early/2017/12/28/240317
