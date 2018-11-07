@@ -29,7 +29,8 @@ def reconstruct_image(features, net, net_gen,
                       momentum_start=0.9, momentum_end=0.9,
                       decay_start=0.01, decay_end=0.01,
                       disp_every=1,
-                      save_intermediate=False, save_intermediate_every=1, save_intermediate_path=None
+                      save_intermediate=False, save_intermediate_every=1, save_intermediate_path=None,
+                      gpu = False, device = 0
                       ):
     '''Reconstruct image from CNN features using gradient descent with momentum and a deep generator network.
 
@@ -111,6 +112,14 @@ def reconstruct_image(features, net, net_gen,
         It is 1 dimensional array of the value of the loss for each iteration.
     '''
 
+    if gpu:
+        print('Use gpu')
+        caffe.set_mode_gpu()
+        caffe.set_device(device)
+    else:
+        print('Use cpu')
+        caffe.set_mode_cpu()
+    
     # loss function
     loss_fun = switch_loss_fun(loss_type)
 

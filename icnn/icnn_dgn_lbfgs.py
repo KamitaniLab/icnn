@@ -25,7 +25,8 @@ def reconstruct_image(features, net, net_gen,
                       gen_feat_bounds=None,
                       input_layer_gen=None, output_layer_gen=None,
                       loss_type='l2', maxiter=500, disp=True,
-                      save_intermediate=False, save_intermediate_every=1, save_intermediate_path=None
+                      save_intermediate=False, save_intermediate_every=1, save_intermediate_path=None,
+                      gpu = False, device = 0
                       ):
     '''Reconstruct image from CNN features using L-BFGS-B and a deep generator network.
 
@@ -88,7 +89,15 @@ def reconstruct_image(features, net, net_gen,
         The loss for each iteration.
         It is 1 dimensional array of the value of the loss for each iteration.  
     '''
-
+    
+    if gpu:
+        print('Use gpu')
+        caffe.set_mode_gpu()
+        caffe.set_device(device)
+    else:
+        print('Use cpu')
+        caffe.set_mode_cpu()
+        
     # loss function
     loss_fun = switch_loss_fun(loss_type)
 

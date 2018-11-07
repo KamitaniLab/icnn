@@ -18,7 +18,11 @@ from .utils import create_feature_masks, img_deprocess, img_preprocess, normalis
 
 
 def reconstruct_image(features, net,
-                      layer_weight=None, channel=None, mask=None, initial_image=None, loss_type='l2', maxiter=500, disp=True, save_intermediate=False, save_intermediate_every=1, save_intermediate_path=None):
+                      layer_weight=None, channel=None, mask=None, initial_image=None, 
+                      loss_type='l2', maxiter=500, disp=True, 
+                      save_intermediate=False, save_intermediate_every=1, save_intermediate_path=None,
+                      gpu = False, device = 0
+                      ):
     '''Reconstruct image from CNN features using L-BFGS-B.
 
     Parameters
@@ -71,6 +75,14 @@ def reconstruct_image(features, net,
         It is 1 dimensional array of the value of the loss for each iteration.   
     '''
 
+    if gpu:
+        print('Use gpu')
+        caffe.set_mode_gpu()
+        caffe.set_device(device)
+    else:
+        print('Use cpu')
+        caffe.set_mode_cpu()
+        
     # loss function
     loss_fun = switch_loss_fun(loss_type)
 

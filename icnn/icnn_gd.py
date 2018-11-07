@@ -34,7 +34,8 @@ def reconstruct_image(features, net,
                       clip_small_norm=False, clip_small_norm_every=4, n_pct_start=5., n_pct_end=5.,
                       clip_small_contribution=False, clip_small_contribution_every=4, c_pct_start=5., c_pct_end=5.,
                       disp_every=1,
-                      save_intermediate=False, save_intermediate_every=1, save_intermediate_path=None
+                      save_intermediate=False, save_intermediate_every=1, save_intermediate_path=None,
+                      gpu = False, device = 0
                       ):
     '''Reconstruct image from CNN features using gradient descent with momentum.
 
@@ -172,6 +173,14 @@ def reconstruct_image(features, net,
         It is 1 dimensional array of the value of the loss for each iteration.
     '''
 
+    if gpu:
+        print('Use gpu')
+        caffe.set_mode_gpu()
+        caffe.set_device(device)
+    else:
+        print('Use cpu')
+        caffe.set_mode_cpu()
+        
     # loss function
     loss_fun = switch_loss_fun(loss_type)
 
