@@ -18,7 +18,9 @@ from .utils import create_feature_masks, img_deprocess, img_preprocess, normalis
 
 
 def reconstruct_image(features, net,
-                      layer_weight=None, channel=None, mask=None, initial_image=None, loss_type='l2', maxiter=500, disp=True, save_intermediate=False, save_intermediate_every=1, save_intermediate_path=None, save_intermediate_postprocess=normalise_img):
+                      layer_weight=None, channel=None, mask=None, initial_image=None, loss_type='l2', maxiter=500, disp=True, save_intermediate=False, save_intermediate_every=1, save_intermediate_path=None,
+                      save_intermediate_ext='jpg',
+                      save_intermediate_postprocess=normalise_img):
     '''Reconstruct image from CNN features using L-BFGS-B.
 
     Parameters
@@ -131,7 +133,7 @@ def reconstruct_image(features, net,
     # optimization params
     loss_list = []
     opt_params = {
-        'args': (net, features, feature_masks, layer_weight, loss_fun, save_intermediate, save_intermediate_every, save_intermediate_path, save_intermediate_postprocess, loss_list),
+        'args': (net, features, feature_masks, layer_weight, loss_fun, save_intermediate, save_intermediate_every, save_intermediate_path, save_intermediate_ext, save_intermediate_postprocess, loss_list),
 
         'method': 'L-BFGS-B',
 
@@ -153,7 +155,7 @@ def reconstruct_image(features, net,
     return img_deprocess(img, img_mean), loss_list
 
 
-def obj_fun(img, net, features, feature_masks, layer_weight, loss_fun, save_intermediate, save_intermediate_every, save_intermediate_path, save_intermediate_postprocess, loss_list=[]):
+def obj_fun(img, net, features, feature_masks, layer_weight, loss_fun, save_intermediate, save_intermediate_every, save_intermediate_path, save_intermediate_ext, save_intermediate_postprocess, loss_list=[]):
     # reshape img
     img_size = net.blobs['data'].data.shape[-3:]
     img = img.reshape(img_size)
@@ -162,7 +164,7 @@ def obj_fun(img, net, features, feature_masks, layer_weight, loss_fun, save_inte
     t = len(loss_list)
     if save_intermediate and (t % save_intermediate_every == 0):
         img_mean = net.transformer.mean['data']
-        save_path = os.path.join(save_intermediate_path, '%05d.jpg' % (t))
+        save_path = os.path.join(save_intermediate_path, '%05d.%s' % (t, save_intermediate_ext))
         if save_intermediate_postprocess is None:
             snapshot_img = img_deprocess(img, img_mean)
         else:

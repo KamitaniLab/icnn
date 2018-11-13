@@ -30,6 +30,7 @@ def reconstruct_image(features, net, net_gen,
                       decay_start=0.01, decay_end=0.01,
                       disp_every=1,
                       save_intermediate=False, save_intermediate_every=1, save_intermediate_path=None,
+                      save_intermediate_ext='jpg',
                       save_intermediate_postprocess=normalise_img
                       ):
     '''Reconstruct image from CNN features using gradient descent with momentum and a deep generator network.
@@ -194,7 +195,7 @@ def reconstruct_image(features, net, net_gen,
         img = img0[:, top_left[0]:top_left[0]+img_size[1],
                    top_left[1]:top_left[1]+img_size[2]].copy()
         if t == 0 and save_intermediate:
-            save_name = 'initial_img.jpg'
+            save_name = 'initial_img.' + save_intermediate_ext
             PIL.Image.fromarray(np.uint8(img_deprocess(img, img_mean))).save(os.path.join(save_intermediate_path, save_name))
 
         # forward for net
@@ -273,7 +274,7 @@ def reconstruct_image(features, net, net_gen,
 
         # save image
         if save_intermediate and ((t+1) % save_intermediate_every == 0):
-            save_path = os.path.join(save_intermediate_path, '%05d.jpg' % (t+1))
+            save_path = os.path.join(save_intermediate_path, '%05d.%s' % (t+1, save_intermediate_ext))
             if save_intermediate_postprocess is None:
                 snapshot_img = img_deprocess(img, img_mean)
             else:
