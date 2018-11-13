@@ -25,7 +25,8 @@ def reconstruct_image(features, net, net_gen,
                       gen_feat_bounds=None,
                       input_layer_gen=None, output_layer_gen=None,
                       loss_type='l2', maxiter=500, disp=True,
-                      save_intermediate=False, save_intermediate_every=1, save_intermediate_path=None
+                      save_intermediate=False, save_intermediate_every=1, save_intermediate_path=None,
+                      save_intermediate_postprocess=normalise_img
                       ):
     '''Reconstruct image from CNN features using L-BFGS-B and a deep generator network.
 
@@ -79,6 +80,8 @@ def reconstruct_image(features, net, net_gen,
         Save the intermediate reconstruction for every n iterations.
     save_intermediate_path: str
         The path to save the intermediate reconstruction.
+    save_intermediate_postprocess : func
+        Function for postprocessing of intermediate reconstructed images.
 
     Returns
     -------
@@ -158,7 +161,7 @@ def reconstruct_image(features, net, net_gen,
     # optimization params
     loss_list = []
     opt_params = {
-        'args': (net, features, feature_masks, layer_weight, net_gen, input_layer_gen, output_layer_gen, loss_fun, save_intermediate, save_intermediate_every, save_intermediate_path, loss_list),
+        'args': (net, features, feature_masks, layer_weight, net_gen, input_layer_gen, output_layer_gen, loss_fun, save_intermediate, save_intermediate_every, save_intermediate_path, save_intermediate_postprocess, loss_list),
 
         'method': 'L-BFGS-B',
 
@@ -193,7 +196,7 @@ def reconstruct_image(features, net, net_gen,
     return img_deprocess(img, img_mean), loss_list
 
 
-def obj_fun(feat_gen, net, features, feature_masks, layer_weight, net_gen, input_layer_gen, output_layer_gen, loss_fun, save_intermediate, save_intermediate_every, save_intermediate_path, loss_list=[]):
+def obj_fun(feat_gen, net, features, feature_masks, layer_weight, net_gen, input_layer_gen, output_layer_gen, loss_fun, save_intermediate, save_intermediate_every, save_intermediate_path, save_intermediate_postprocess, loss_list=[]):
     # reshape feat_gen
     feat_gen_size = net_gen.blobs[input_layer_gen].data.shape[1:]
     feat_gen = feat_gen.reshape(feat_gen_size)
@@ -217,8 +220,12 @@ def obj_fun(feat_gen, net, features, feature_masks, layer_weight, net_gen, input
     t = len(loss_list)
     if save_intermediate and (t % save_intermediate_every == 0):
         img_mean = net.transformer.mean['data']
-        save_name = '%05d.jpg' % t
-        PIL.Image.fromarray(normalise_img(img_deprocess(img, img_mean))).save(os.path.join(save_intermediate_path, save_name))
+        save_path = os.path.join(save_intermediate_path, '%05d.jpg' % (t))
+        if save_intermediate_postprocess is None:
+            snapshot_img = img_deprocess(img, img_mean)
+        else:
+            snapshot_img = save_intermediate_postprocess(img_deprocess(img, img_mean))
+        PIL.Image.fromarray(snapshot_img).save(save_path)
 
     # layer_list
     layer_list = features.keys()

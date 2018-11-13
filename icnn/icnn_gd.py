@@ -34,7 +34,8 @@ def reconstruct_image(features, net,
                       clip_small_norm=False, clip_small_norm_every=4, n_pct_start=5., n_pct_end=5.,
                       clip_small_contribution=False, clip_small_contribution_every=4, c_pct_start=5., c_pct_end=5.,
                       disp_every=1,
-                      save_intermediate=False, save_intermediate_every=1, save_intermediate_path=None
+                      save_intermediate=False, save_intermediate_every=1, save_intermediate_path=None,
+                      save_intermediate_postprocess=normalise_img
                       ):
     '''Reconstruct image from CNN features using gradient descent with momentum.
 
@@ -162,6 +163,8 @@ def reconstruct_image(features, net,
         Save the intermediate reconstruction for every n iterations.
     save_intermediate_path: str
         The path to save the intermediate reconstruction.
+    save_intermediate_postprocess : func
+        Function for postprocessing of intermediate reconstructed images.
 
     Returns
     -------
@@ -347,8 +350,12 @@ def reconstruct_image(features, net,
 
         # save image
         if save_intermediate and ((t+1) % save_intermediate_every == 0):
-            save_name = '%05d.jpg' % (t+1)
-            PIL.Image.fromarray(normalise_img(img_deprocess(img, img_mean))).save(os.path.join(save_intermediate_path, save_name))
+            save_path = os.path.join(save_intermediate_path, '%05d.jpg' % (t+1))
+            if save_intermediate_postprocess is None:
+                snapshot_img = img_deprocess(img, img_mean)
+            else:
+                 snapshot_img = save_intermediate_postprocess(img_deprocess(img, img_mean))
+            PIL.Image.fromarray(snapshot_img).save(save_path)
 
     # return img
     return img_deprocess(img, img_mean), loss_list
