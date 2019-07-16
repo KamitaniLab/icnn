@@ -9,7 +9,7 @@ if __name__ == '__main__':
           version='1.1.0',
           description='Inverting CNN',
           author='Shen Guo-Hua, Kei Majima',
-          author_email='kamitanilab.contact@gmail.com',
+          author_email='brainliner-admin@atr.jp',
           url='https://github.com/KamitaniLab/icnn',
           license='MIT',
           packages=['icnn'],
