@@ -11,7 +11,7 @@ if __name__ == '__main__':
           author='Shen Guo-Hua, Kei Majima',
           author_email='brainliner-admin@atr.jp',
           maintainer='Shuntaro C. Aoki',
-          maintainer_email='kamitanilab.contact@gmail.com',
+          maintainer_email='brainliner-admin@atr.jp',
           url='https://github.com/KamitaniLab/icnn',
           license='MIT',
           packages=['icnn'],
