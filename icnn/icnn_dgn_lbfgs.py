@@ -99,7 +99,7 @@ def reconstruct_image(features, net, net_gen,
     # make dir for saving intermediate
     if save_intermediate:
         if save_intermediate_path is None:
-            save_intermediate_path = os.path.join('.', 'recon_img_by_icnn_dgn_lbfgs_' + datetime.now().strftime('%Y%m%dT%H%M%S'))
+            save_intermediate_path = os.path.join('./recon_img_dgn_lbfgs_snapshots' + datetime.now().strftime('%Y%m%dT%H%M%S'))
         if not os.path.exists(save_intermediate_path):
             os.makedirs(save_intermediate_path)
 
