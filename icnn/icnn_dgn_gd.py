@@ -192,7 +192,7 @@ def reconstruct_image(features, net, net_gen,
         net_gen.blobs[input_layer_gen].data[0] = feat_gen.copy()
         net_gen.forward()
 
-        feat_gen_final = feat_gen.copy()  # Keep feat_gen for return_gen_feat
+        final_gen_feat = feat_gen.copy()  # Keep feat_gen for return_gen_feat
 
         # generated image
         img0 = net_gen.blobs[output_layer_gen].data[0].copy()
@@ -287,8 +287,13 @@ def reconstruct_image(features, net, net_gen,
                  snapshot_img = save_intermediate_postprocess(img_deprocess(img, img_mean))
             PIL.Image.fromarray(snapshot_img).save(save_path)
 
+    # Save final features
+    if save_intermediate:
+        save_name = 'final_gen_feat.mat'
+        sio.savemat(os.path.join(save_intermediate_path, save_name), {'final_gen_feat': final_gen_feat})
+
     # return img
     if return_gen_feat:
-        return img_deprocess(img, img_mean), loss_list, feat_gen_final
+        return img_deprocess(img, img_mean), loss_list, final_gen_feat
     else:
         return img_deprocess(img, img_mean), loss_list
