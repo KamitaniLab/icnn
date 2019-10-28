@@ -31,8 +31,8 @@ def reconstruct_image(features, net, net_gen,
                       disp_every=1,
                       save_intermediate=False, save_intermediate_every=1, save_intermediate_path=None,
                       save_intermediate_ext='jpg',
-                      save_intermediate_postprocess=normalise_img
-                      ):
+                      save_intermediate_postprocess=normalise_img,
+                      return_gen_feat=False):
     '''Reconstruct image from CNN features using gradient descent with momentum and a deep generator network.
 
     Parameters
@@ -50,7 +50,7 @@ def reconstruct_image(features, net, net_gen,
     layer_weight: dict
         The weight for each layer in the loss function.
         The weights of multiple layers are assembled in a python dictionary, arranged in pairs of layer name (key) and weight(value).
-        Use equal weights for all layers by setting to None. 
+        Use equal weights for all layers by setting to None.
     channel: dict
         The channel numbers of each layer to be used in the loss function.
         The channels of multiple layers are assembled in a python dictionary, arranged in pairs of layer name (key) and channel numbers(value).
@@ -105,6 +105,8 @@ def reconstruct_image(features, net, net_gen,
         The path to save the intermediate reconstruction.
     save_intermediate_postprocess : func
         Function for postprocessing of intermediate reconstructed images.
+    return_gen_feat: bool
+        Returns final features (input to the generator) if True.
 
     Returns
     -------
@@ -113,6 +115,8 @@ def reconstruct_image(features, net, net_gen,
     loss_list: ndarray
         The loss for each iteration.
         It is 1 dimensional array of the value of the loss for each iteration.
+    feat_gen_final: ndarray
+        Final features for the generator (input to the generator).
     '''
 
     # loss function
@@ -187,6 +191,8 @@ def reconstruct_image(features, net, net_gen,
         # forward for generator
         net_gen.blobs[input_layer_gen].data[0] = feat_gen.copy()
         net_gen.forward()
+
+        feat_gen_final = feat_gen.copy()  # Keep feat_gen for return_gen_feat
 
         # generated image
         img0 = net_gen.blobs[output_layer_gen].data[0].copy()
@@ -282,4 +288,7 @@ def reconstruct_image(features, net, net_gen,
             PIL.Image.fromarray(snapshot_img).save(save_path)
 
     # return img
-    return img_deprocess(img, img_mean), loss_list
+    if return_gen_feat:
+        return img_deprocess(img, img_mean), loss_list, feat_gen_final
+    else:
+        return img_deprocess(img, img_mean), loss_list
