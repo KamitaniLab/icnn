@@ -27,8 +27,8 @@ def reconstruct_image(features, net, net_gen,
                       loss_type='l2', maxiter=500, disp=True,
                       save_intermediate=False, save_intermediate_every=1, save_intermediate_path=None,
                       save_intermediate_ext='jpg',
-                      save_intermediate_postprocess=normalise_img
-                      ):
+                      save_intermediate_postprocess=normalise_img,
+                      return_gen_feat=False):
     '''Reconstruct image from CNN features using L-BFGS-B and a deep generator network.
 
     Parameters
@@ -83,6 +83,8 @@ def reconstruct_image(features, net, net_gen,
         The path to save the intermediate reconstruction.
     save_intermediate_postprocess : func
         Function for postprocessing of intermediate reconstructed images.
+    return_gen_feat: bool
+        Returns final features (input to the generator) if True.
 
     Returns
     -------
@@ -91,6 +93,8 @@ def reconstruct_image(features, net, net_gen,
     loss_list: ndarray
         The loss for each iteration.
         It is 1 dimensional array of the value of the loss for each iteration.  
+    feat_gen_final: ndarray, optional
+        Final features for the generator (input to the generator).
     '''
 
     # loss function
@@ -193,8 +197,16 @@ def reconstruct_image(features, net, net_gen,
     img = img0[:, top_left[0]:top_left[0]+img_size[1],
                top_left[1]:top_left[1]+img_size[2]].copy()
 
+    # Save final features
+    if save_intermediate:
+        save_name = 'final_gen_feat.mat'
+        sio.savemat(os.path.join(save_intermediate_path, save_name), {'final_gen_feat': feat_gen})
+
     # return img
-    return img_deprocess(img, img_mean), loss_list
+    if return_gen_feat:
+        return img_deprocess(img, img_mean), loss_list, feat_gen
+    else:
+        return img_deprocess(img, img_mean), loss_list
 
 
 def obj_fun(feat_gen, net, features, feature_masks, layer_weight, net_gen, input_layer_gen, output_layer_gen, loss_fun, save_intermediate, save_intermediate_every, save_intermediate_path, save_intermediate_ext, save_intermediate_postprocess, loss_list=[]):
