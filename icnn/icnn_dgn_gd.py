@@ -115,7 +115,7 @@ def reconstruct_image(features, net, net_gen,
     loss_list: ndarray
         The loss for each iteration.
         It is 1 dimensional array of the value of the loss for each iteration.
-    feat_gen_final: ndarray
+    feat_gen_final: ndarray, optional
         Final features for the generator (input to the generator).
     '''
 
