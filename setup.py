@@ -4,7 +4,7 @@
 from setuptools import setup
 
 
-VERSION = '1.2.2rc0'
+VERSION = '1.2.2'
 
 if __name__ == '__main__':
 
