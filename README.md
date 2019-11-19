@@ -37,7 +37,7 @@ The **icnn_gd** implements the image reconstruction algorithm using gradient des
 ## Installation
 
 ``` shellsession
-$ pip install git+https://github.com/KamitaniLab/icnn.git
+$ pip install icnn
 ```
 
 ## Basic Usage
