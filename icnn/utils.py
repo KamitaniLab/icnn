@@ -10,8 +10,6 @@ import scipy.io as sio
 import scipy.ndimage as nd
 from scipy.misc import imresize
 
-import caffe
-
 
 def img_preprocess(img, img_mean=np.float32([104, 117, 123])):
     '''convert to Caffe's input image layout'''
