@@ -56,7 +56,7 @@ if [ "$target" = 'deepsim' ]; then
     [ -f deepsim_v0.zip ] || download_file $srcurl deepsim_v0.zip
     [ -d deepsim_v0 ] || unzip deepsim_v0.zip
     [ -d $(dirname $output) ] || mkdir $(dirname $output)
-    cp deepsim_v0/fc7/generator.caffemodel $output
+    cp release_deepsim_v0/fc7/generator.caffemodel $output
 
     echo "$output saved."
     exit 0
