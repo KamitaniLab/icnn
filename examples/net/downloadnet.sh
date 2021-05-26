@@ -36,7 +36,7 @@ fi
 # VGG19
 if [ "$target" = 'vgg19' ]; then
     output=VGG_ILSVRC_19_layers/VGG_ILSVRC_19_layers.caffemodel
-    srcurl=http://www.robots.ox.ac.uk/~vgg/software/very_deep/caffe/VGG_ILSVRC_19_layers.caffemodel
+    srcurl=https://www.robots.ox.ac.uk/~vgg/software/very_deep/caffe/VGG_ILSVRC_19_layers.caffemodel
 
     [ -f $output ] && echo "$output already exists." && exit 0
     
