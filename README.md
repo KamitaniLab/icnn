@@ -1,5 +1,7 @@
 # Inverting CNN (iCNN): image reconstruction from CNN features
 
+**Note: This package works with Python 2 and Caffe. Python 3 + PyTorch implementation of the reconstruction function is included in [bdpy](https://github.com/KamitaniLab/bdpy). Example code is available at [brain-decoding-cookbook-public](https://github.com/KamitaniLab/brain-decoding-cookbook-public/tree/main/reconstruction).**
+
 This repository contains source codes of the image reconstruction algorithms used in the paper "Deep image reconstruction from human brain activity" [1].
 The image reconstruction algorithms are extension of the algorithm proposed in the paper "Understanding deep image representations by inverting them" [2].
 
